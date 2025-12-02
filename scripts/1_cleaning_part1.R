@@ -110,26 +110,26 @@ saveRDS(patient_practice, paste0(rds_dir, "Patient_practice.RDS"))
 #------------------------# stata files
 # now we can create the stata files
 
-# pat$patid <- as.character(pat$patid) # needs to be character for stata
-# patient_practice$patid <- as.character(patient_practice$patid) # needs to be character for stata
-# readstata13::save.dta13(pat, paste0(dta_dir, "Patient.dta"), convert.dates = TRUE)
-# readstata13::save.dta13(practice, paste0(dta_dir, "Practice.dta"), convert.dates = TRUE)
-# readstata13::save.dta13(patient_practice, paste0(dta_dir, "Patient_practice.dta"), convert.dates = TRUE)
+pat$patid <- as.character(pat$patid) # needs to be character for stata
+patient_practice$patid <- as.character(patient_practice$patid) # needs to be character for stata
+readstata13::save.dta13(pat, paste0(dta_dir, "Patient.dta"), convert.dates = TRUE)
+readstata13::save.dta13(practice, paste0(dta_dir, "Practice.dta"), convert.dates = TRUE)
+readstata13::save.dta13(patient_practice, paste0(dta_dir, "Patient_practice.dta"), convert.dates = TRUE)
 
 #---------------------------------# observations and drugfiles
 
 # Now, for the observation files and the drug files, it's helpful to use parallel
 # processing to make it happen a bit quicker
 
+# in this project we will be using snomed concept ids (/dmdids) to identify records,
+# so probably good to add them in at this step. 
+
+
 medcode_to_snomed <- fread(paste0(lookups, "202509_EMISMedicalDictionary.txt"))
 
 medcode_to_snomed <- medcode_to_snomed %>% dplyr::select(medcodeid = MedCodeId,
                                                          snomedctconceptid = SnomedCTConceptId) %>%
   unique()
-
-
-# summary(medcode_to_snomed)
-# nrow(unique(medcode_to_snomed))
 
 if (length(unique(medcode_to_snomed$medcodeid)) != nrow(medcode_to_snomed)) {
   message("medcodeids not unique - this will mess up the linkage so check what's going on") # every one here must be unique
@@ -138,6 +138,8 @@ if (length(unique(medcode_to_snomed$medcodeid)) != nrow(medcode_to_snomed)) {
 # set medcodeid as the key column to join on later
 setkey(medcode_to_snomed, medcodeid)
 
+
+# do the same for the product dictionary:
 prodcode_to_dmdid <- fread(paste0(lookups, "202509_EMISProductDictionary.txt"))
 
 prodcode_to_dmdid <- prodcode_to_dmdid %>% dplyr::select(prodcodeid = ProdCodeId,
@@ -149,30 +151,126 @@ if (length(unique(prodcode_to_dmdid$prodcodeid)) != nrow(prodcode_to_dmdid)) {
 }
 
 
+# create a list of the obs files and drugs files
 
 obs_files <- extract_files[grepl("Observation", extract_files) == TRUE]
 drugs_files <- extract_files[grepl("DrugIssue", extract_files) == TRUE]
+filelist <- c(obs_files, drugs_files)
 
-# to make these easier to cycle through later, I am going to renumber them.
+# to make these easier to cycle through later, I am going to renumber them
+# when they are saved:
 # 1_Extract_Observation_001 -> Observation_1
 # 1_Extract_Observation_029 -> Observation_29
 # 2_Extract_Observation_001 -> Observation_30 # etc. 
 
-# in this project we will be using snomed concept ids to identify records,
-# so probably good to add them in at this step. 
+
+# here is the pipe to clean obs/drugs:
+
+# I would prefer to do this in two pipes, but makes sense to do it all in one
+# using the parallel processing to reduce overheads
+cleaning_pipe <- function(file,
+                          obs_filelist, 
+                          drugs_filelist,
+                          medcode_to_snomed,
+                          prodcode_to_dmdid,
+                          rawdatadir = "Z:/Group_work/raw_data/QOF/", 
+                          rds_dir   = "X:/QOF_project/Data/tidy_data/RDS/", 
+                          dta_dir   = "X:/QOF_project/Data/tidy_data/dta/") {
+  
+  full_path <- paste0(rawdatadir, file)
+  
+  ## ---- OBSERVATION FILES ----
+  if (file %in% obs_filelist) {
+    
+    datobs <- data.table::fread(full_path)
+    
+    # index in obs_filelist
+    endobs     <- match(file, obs_filelist)
+    filenameobs <- paste0("Observation_", endobs)
+    
+    datobs <- datobs %>%
+      dplyr::mutate(
+        obsdate   = as.Date(obsdate,   format = "%d/%m/%Y"),
+        enterdate = as.Date(enterdate, format = "%d/%m/%Y")
+      ) %>%
+      dplyr::select(
+        -consid, -obsid, -staffid, -parentobsid,
+        -numrangelow, -numrangehigh, -probobsid
+      )
+    
+    data.table::setkey(datobs, medcodeid)
+    datobs <- medcode_to_snomed[datobs, on = "medcodeid"]
+    
+    # save RDS
+    saveRDS(datobs, paste0(rds_dir, filenameobs, ".RDS"))
+
+    # save Stata
+    datobs$patid               <- as.character(datobs$patid)
+    datobs$medcodeid           <- as.character(datobs$medcodeid)
+    datobs$snomedctconceptid   <- as.character(datobs$snomedctconceptid)
+
+    readstata13::save.dta13(
+      datobs,
+      paste0(dta_dir, filenameobs, ".dta"),
+      convert.dates = TRUE
+    )
+    
+    return(head(datobs))
+  }
+  
+  ## ---- DRUGS FILES ----
+  if (file %in% drugs_filelist) {
+    
+    datdrugs <- data.table::fread(full_path)
+    
+    enddrugs     <- match(file, drugs_filelist)
+    filenamedrugs <- paste0("DrugIssue_", enddrugs)
+    
+    datdrugs <- datdrugs %>%
+      dplyr::mutate(
+        issuedate = as.Date(issuedate, format = "%d/%m/%Y"),
+        enterdate = as.Date(enterdate, format = "%d/%m/%Y")
+      ) %>%
+      dplyr::select(
+        -issueid, -probobsid, -drugrecid, -staffid
+      )
+    
+    data.table::setkey(datdrugs, prodcodeid)
+    datdrugs <- prodcode_to_dmdid[datdrugs, on = "prodcodeid"]
+    
+    # save RDS
+    saveRDS(datdrugs, paste0(rds_dir, filenamedrugs, ".RDS"))
+    
+    # save Stata
+    datdrugs$patid     <- as.character(datdrugs$patid)
+    datdrugs$prodcodeid <- as.character(datdrugs$prodcodeid)
+    datdrugs$dmdid     <- as.character(datdrugs$dmdid)
+
+    readstata13::save.dta13(
+      datdrugs,
+      paste0(dta_dir, filenamedrugs, ".dta"),
+      convert.dates = TRUE
+    )
+    
+    return(head(datdrugs))
+  }
+  
+  ## ---- NEITHER ----
+  stop("File is not in obs_filelist or drugs_filelist: ", file)
+}
 
 
 
-length(obs_files)
+# parallelise
+
+Sys.time()
+
+
 detectCores()
-ncores <- 2
+ncores <- 80
 
 # Create a cluster
 cl <- makeCluster(ncores)
-
-# # may need to do this step multiple times if the numbers get too large
-# dat <- map(extract_files, apply_codelist_pipe, codelist = smoking_codelist, 
-#     path = "Z:/Group_work/raw_data/smoking/", cleaning_for_obs = TRUE)
 
 # we should parallelise this process
 
@@ -185,84 +283,14 @@ clusterEvalQ(cl, { # these need to be read into each cluster
 
 
 # these R objects are necessary in each cluster
-clusterExport(cl, varlist = c("obs_files", "medcode_to_snomed", "apply_codelist_pipe"), envir = environment())
+clusterExport(cl, varlist = c("filelist", "obs_files", "drugs_files", "medcode_to_snomed", "prodcode_to_dmdid", 
+                              "cleaning_pipe"), envir = environment())
 
-big <- parLapply(cl, extract_files, function(dat) {
-  apply_codelist_pipe(dat, codelist = smoking_codelist, path = "Z:/Group_work/raw_data/smoking/")
-})
-
-stopCluster(cl)
-
-Sys.time()
-
-dat <- fread(paste0(rawdatadir, drugs_files[1]))
-
-head(dat)
-summary(dat$issueid)
-# I would prefer to do this in two pipes, but makes sense to do it all in one
-# using the parallel processing
-
-cleaning_pipe <- function(obs_file, obs_filelist, 
-                          drugs_file, drugs_filelist,
-                          medcode_to_snomed,
-                          prodcode_to_dmdid,
-                           rawdatadir = "Z:/Group_work/raw_data/QOF/", 
-                           rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", 
-                           dta_dir = "X:/QOF_project/Data/tidy_data/dta/") {
-  # obs
-  datobs <- fread(paste0(rawdatadir, obs_file)) 
-  endobs <- which(obs_filelist == obs_file)
-  filenameobs <- paste0("Observation_", endobs)
-  datobs <- datobs %>% dplyr::mutate(obsdate = as.Date(obsdate, format = "%d/%m/%Y"),
-                             enterdate = as.Date(enterdate, format = "%d/%m/%Y"))
-  datobs <- datobs %>% dplyr::select(-consid, -obsid, -staffid, -parentobsid,
-                               -numrangelow, -numrangehigh, -probobsid)
-  data.table::setkey(datobs, medcodeid)
-  datobs <- medcode_to_snomed[datobs, on = "medcodeid"]
-  
-  saveRDS(datobs, paste0(rds_dir, filenameobs, ".RDS")) # rds files
-  
-  # obs stata files
-  datobs$patid <- as.character(datobs$patid)
-  datobs$medcodeid <- as.character(datobs$medcodeid)
-  datobs$snomedctconceptid <- as.character(datobs$snomedctconceptid)
-  readstata13::save.dta13(datobs, paste0(dta_dir, filenameobs, ".dta"), convert.dates = TRUE)
-  
-  
-  # drugs
-  datdrugs <- fread(paste0(rawdatadir, drugs_file)) 
-  enddrugs <- which(drugs_filelist == drugs_file)
-  filenamedrugs <- paste0("DrugIssue_", end)
-  datdrugs <- datdrugs %>% dplyr::mutate(issuedate = as.Date(issuedate, format = "%d/%m/%Y"),
-                                     enterdate = as.Date(enterdate, format = "%d/%m/%Y"))
-  datdrugs <- datdrugs %>% dplyr::select(-issueid, -probobsid, -drugrecid, -staffid)
-  data.table::setkey(datdrugs, prodcodeid)
-  datdrugs <- prodcode_to_dmdid[datdrugs, on = "prodcodeid"]
-  
-  saveRDS(datdrugs, paste0(rds_dir, filenameobs, ".RDS")) # rds files
-  
-  # drugs stata files
-  datdrugs$patid <- as.character(datdrugs$patid)
-  datdrugs$prodcodeid <- as.character(datdrugs$prodcodeid)
-  datdrugs$dmdid <- as.character(datdrugs$dmdid)
-  readstata13::save.dta13(datdrugs, paste0(dta_dir, filenamedrugs, ".dta"), convert.dates = TRUE)
-  
-  
-  return(list(head(datobs), head(datdrugs))) # just a token thing that can be checked
-}
-
-
-list(head(dat), head(dat))
-
-# test <- lapply(obs_files[1], function(x) {
-#   clean_obs_pipe(x, obs_filelist = obs_files, medcode_to_snomed = medcode_to_snomed)
-# })
-
-# these R objects are necessary in each cluster
-clusterExport(cl, varlist = c("smoking_codelist", "apply_codelist_pipe"), envir = environment())
-
-big <- parLapply(cl, extract_files, function(dat) {
-  apply_codelist_pipe(dat, codelist = smoking_codelist, path = "Z:/Group_work/raw_data/smoking/")
+big <- parLapply(cl, filelist, function(x) {
+  cleaning_pipe(x,    obs_filelist = obs_files, 
+                drugs_filelist = drugs_files,
+                medcode_to_snomed = medcode_to_snomed,
+                prodcode_to_dmdid = prodcode_to_dmdid)
 })
 
 stopCluster(cl)
