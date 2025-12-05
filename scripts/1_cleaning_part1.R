@@ -174,8 +174,8 @@ cleaning_pipe <- function(file,
                           medcode_to_snomed,
                           prodcode_to_dmdid,
                           rawdatadir = "Z:/Group_work/raw_data/QOF/", 
-                          rds_dir   = "X:/QOF_project/Data/tidy_data/RDS/", 
-                          dta_dir   = "X:/QOF_project/Data/tidy_data/dta/") {
+                          rds_dir   = "X:/QOF_project/Data/working_data/", 
+                          dta_dir   = "X:/QOF_project/Data/working_data/") {
   
   full_path <- paste0(rawdatadir, file)
   
@@ -204,16 +204,16 @@ cleaning_pipe <- function(file,
     # save RDS
     saveRDS(datobs, paste0(rds_dir, filenameobs, ".RDS"))
 
-    # save Stata
-    datobs$patid               <- as.character(datobs$patid)
-    datobs$medcodeid           <- as.character(datobs$medcodeid)
-    datobs$snomedctconceptid   <- as.character(datobs$snomedctconceptid)
-
-    readstata13::save.dta13(
-      datobs,
-      paste0(dta_dir, filenameobs, ".dta"),
-      convert.dates = TRUE
-    )
+    # # save Stata
+    # datobs$patid               <- as.character(datobs$patid)
+    # datobs$medcodeid           <- as.character(datobs$medcodeid)
+    # datobs$snomedctconceptid   <- as.character(datobs$snomedctconceptid)
+    # 
+    # readstata13::save.dta13(
+    #   datobs,
+    #   paste0(dta_dir, filenameobs, ".dta"),
+    #   convert.dates = TRUE
+    # )
     
     return(head(datobs))
   }
@@ -241,16 +241,16 @@ cleaning_pipe <- function(file,
     # save RDS
     saveRDS(datdrugs, paste0(rds_dir, filenamedrugs, ".RDS"))
     
-    # save Stata
-    datdrugs$patid     <- as.character(datdrugs$patid)
-    datdrugs$prodcodeid <- as.character(datdrugs$prodcodeid)
-    datdrugs$dmdid     <- as.character(datdrugs$dmdid)
-
-    readstata13::save.dta13(
-      datdrugs,
-      paste0(dta_dir, filenamedrugs, ".dta"),
-      convert.dates = TRUE
-    )
+    # # save Stata
+    # datdrugs$patid     <- as.character(datdrugs$patid)
+    # datdrugs$prodcodeid <- as.character(datdrugs$prodcodeid)
+    # datdrugs$dmdid     <- as.character(datdrugs$dmdid)
+    # 
+    # readstata13::save.dta13(
+    #   datdrugs,
+    #   paste0(dta_dir, filenamedrugs, ".dta"),
+    #   convert.dates = TRUE
+    # )
     
     return(head(datdrugs))
   }
