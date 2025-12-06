@@ -253,12 +253,13 @@ cohort <- bigdrugs[cohort, on = "patid"]
 cohort <- cohort %>% relocate(patid, pracid:QSSD)
 
 
-saveRDS(cohort, "X:/QOF_project/Data/cohort/cohort_all.RDS")
-saveRDS(cohort, "X:/QOF_project/Data/cohort/cohort_COPD.RDS")
-saveRDS(cohort, "X:/QOF_project/Data/cohort/cohort_asthma.RDS")
-saveRDS(cohort, "X:/QOF_project/Data/cohort/cohort_smoking.RDS")
-saveRDS(cohort, "X:/QOF_project/Data/cohort/cohort_hypertension.RDS")
+saveRDS(cohort, "X:/QOF_project/Data/cohort/cohort_all_prelim.RDS")
+saveRDS(cohort, "X:/QOF_project/Data/COPD/cohort/cohort_COPD_prelim.RDS")
+saveRDS(cohort, "X:/QOF_project/Data/Asthma/cohort/cohort_asthma_prelim.RDS")
+saveRDS(cohort, "X:/QOF_project/Data/Smoking/cohort/cohort_smoking_prelim.RDS")
+saveRDS(cohort, "X:/QOF_project/Data/Hypertension/cohort/cohort_hypertension_prelim.RDS")
 
 library(readstata13)
 cohort$patid <- as.character(cohort$patid)
-readstata13::save.dta13(cohort, "X:/QOF_project/Data/cohort/cohort_asthma.dta")
+readstata13::save.dta13(cohort, "X:/QOF_project/Data/Asthma/cohort/cohort_asthma_prelim.dta")
+readstata13::save.dta13(cohort, "X:/QOF_project/Data/COPD/cohort/cohort_COPD_prelim.dta")
