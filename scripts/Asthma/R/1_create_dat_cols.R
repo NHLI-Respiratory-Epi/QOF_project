@@ -21,6 +21,7 @@ dat <- dat %>% rename(AST_DAT = AST_COD_earliest,
                       # ASTINVITE2_DAT needs to be created
                       ASTMONDEC_DAT = ASTMONDEC_COD_latest,
                       ASTPCADEC_DAT = ASTPCADEC_COD_latest,
+                      ASTPCAPU_DAT = ASTPCAPU_COD_latest,
                       SMOKSTATDEC_DAT = SMOKSTATDEC_COD_latest,
                       # SPIRPCASU_DAT needs to be created
                       # ASTRES1_DAT needs to be created
