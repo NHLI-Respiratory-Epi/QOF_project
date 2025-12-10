@@ -13,11 +13,11 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/Asthma/cohort/2_cohort_asthma_wit
 # S = select
 # N = next rule
 
-# AST_REG
+#---------------------------------# AST_REG
 
 dat <- dat %>% mutate(AST_REG_RN1 = if_else(!is.na(ASTLAT_DAT) & !is.na(ASTTRT_DAT),
-                                         1, 0), # 1 = NR, 0 = R
-                      AST_REG_RN2 = if_else(is.na(ASTRES_DAT), 1, 0), # 1 = NR, 0 = R
+                                         1, 0), # 1 = N, 0 = R
+                      AST_REG_RN2 = if_else(is.na(ASTRES_DAT), 1, 0), # 1 = N, 0 = R
                       AST_REG_RN3 = if_else(PAT_AGE >= 6, 1, 0)) # 1 = S, 0 = R
 
 dat <- dat %>% mutate(AST_REG = ifelse(AST_REG_RN1 == 1 &
@@ -26,7 +26,7 @@ dat <- dat %>% mutate(AST_REG = ifelse(AST_REG_RN1 == 1 &
 
 
 
-# AST007
+#------------------------------------# AST007
 
 # surprisingly difficult first rule for this one!
 # uses this function to match a particular rev dat against any writpatp date or astexacb date.
@@ -107,13 +107,104 @@ dat <- dat %>% mutate(AST007_denom = if_else(AST_REG == 1 &
 #   mutate_all(~if_else(. == 1, 1, NA)) %>% mice::md.pattern()
 
 
-# numerator is the first rule of the denominator! 
+# numerator is the first rule of the denominator (but also needs to remember that
+# the denominator is applied to AST_REG 
 
-dat <- dat %>% mutate(AST007_nume = AST007_denom_RN1)
+dat <- dat %>% mutate(AST007_nume = ifelse(
+  AST007_denom == 1, AST007_denom_RN1, 0)) # if they are in the denominator then 
+                                           # it is rule 1 of the denominator, otherwise 0
 
 # and the big reveal for quality indicator prevalence........
 
 sum(dat$AST007_nume)/sum(dat$AST007_denom) # Not bad!!!
 
 
+# now AST008: # smoking habit / secondhand smoking
+
+# denominator:
+
+dat <- dat %>% 
+  mutate(AST008_denom_RN1 = if_else(PAT_AGE > 19, 1, 0, missing = 0), # 1 = R, 0 = N,
+         AST008_denom_RN2 = if_else(SMOK_DAT >= QSSD, 1, 0, missing = 0), # 1 = S, 0 = N,
+         AST008_denom_RN3 = if_else(SMOKEXPOS_DAT >= QSSD, 1, 0, missing = 0), # 1 = S, 0 = N,
+         AST008_denom_RN4 = if_else(NOSMOKEXPOS_DAT >= QSSD, 1, 0, missing = 0), # 1 = S, 0 = N,
+         AST008_denom_RN5 = if_else(ASTPCAPU_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N,
+         AST008_denom_RN6 = if_else(SMOKSTATDEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N,
+         AST008_denom_RN7 = if_else(ASTMONDEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N,
+         AST008_denom_RN8 = if_else(ASTPCADEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N,
+         AST008_denom_RN9 = if_else(!is.na(ASTINVITE1_DAT) & !is.na(ASTINVITE2_DAT), 1, 0, missing = 0), # 1 = R, 0 = N
+         AST008_denom_RN10 = if_else(AST_DAT >= ACHV - 93, 1, 0, missing = 0), # 1 = R, 0 = N
+         AST008_denom_RN11 = if_else(regstartdate >= ACHV - 93, 1, 0, missing = 0)) # 1 = R, 0 = S
+
+dat <- dat %>% 
+  mutate(AST008_denom = 
+           if_else(AST_REG == 1 & AST008_denom_RN1 == 0 & # registered and under 19 and...
+                     ((AST008_denom_RN2 == 1 | AST008_denom_RN3 == 1 |  
+                         AST008_denom_RN4 == 1) | # ...meets one of first 3 rules, or
+                        (AST008_denom_RN5 == 0 & # doesn't get ejected by this process (i.e. all = 0)
+                           AST008_denom_RN6 == 0 &
+                           AST008_denom_RN7 == 0 &
+                           AST008_denom_RN8 == 0 &
+                           AST008_denom_RN9 == 0 &
+                           AST008_denom_RN10 == 0 &
+                           AST008_denom_RN11 == 0)),
+                   1, 0, missing = 0))
+                       
+# and create the numerator
+# rules already specified for denominator so can just use the same ones
+# (but note the rules numbers are different for denominator vs numerator)
+# Also, need to be in the denominator to make it into the numerator
+
+dat <- dat %>% mutate(AST008_nume_RN1 = AST008_denom_RN2,
+                      AST008_nume_RN2 = AST008_denom_RN3,
+                      AST008_nume_RN3 = AST008_denom_RN4)
+                      
+dat <- dat %>% 
+  mutate(AST008_nume = 
+           if_else(AST008_denom == 1 & (AST008_nume_RN1 == 1 | AST008_nume_RN2 == 1 |
+                     AST008_nume_RN3 == 1), 1, 0, missing = 0)) 
+
+
+# and the big reveal for quality indicator prevalence........
+
+sum(dat$AST008_nume)/sum(dat$AST008_denom) 
+
+
+# how do these people pass?
+
+dat %>% select(starts_with("AST008_nume")) %>% summary()
+
+dat %>% filter(AST008_denom ==1 & AST008_nume == 1) %>%
+  select(PAT_AGE, starts_with("AST008_nume")) %>% summary()
+
+dat %>% filter(floor(PAT_AGE) == 6) %>%   filter(AST008_denom ==1 & AST008_nume == 1) %>%
+  select(PAT_AGE, starts_with("AST008_nume")) %>% summary()
+
+dat %>% filter(floor(PAT_AGE) %in% 6:12) %>%   filter(AST008_nume == 1) %>%
+  filter(AST008_nume_RN2 == 0 & AST008_nume_RN3 == 0) %>% nrow()
+
+dat %>% filter(floor(PAT_AGE) %in% 6:12) %>%   filter(AST008_nume == 1) %>%
+  filter(AST008_nume_RN2 == 1 | AST008_nume_RN3 == 1) %>% nrow()
+
+# who passed the quality indicator for children's asthma
+# but did not record a secondhand smoking status
+
+# SMOK_DAT is just the latest smoking status so we can see which status they had
+# by matching up the date with non/current/ex COD
+
+colnames(dat)
+
+smoking <- dat %>% filter(AST008_nume == 1) %>%
+  filter(AST008_nume_RN2 == 0 & AST008_nume_RN3 == 0) %>%
+  select(PAT_AGE, SMOK_DAT, NSMOK_COD_latest, EXSMOK_COD_latest, LSMOK_COD_latest)
+
+smoking <- smoking %>% mutate(
+  smoking_matches_never = if_else(SMOK_DAT == NSMOK_COD_latest,
+                                  1, 0, missing = 0),
+  smoking_matches_ex = if_else(SMOK_DAT == EXSMOK_COD_latest,
+                               1, 0, missing = 0),
+  smoking_matches_current = if_else(SMOK_DAT == LSMOK_COD_latest,
+                                    1, 0, missing = 0))
+
+summary(smoking)
 
