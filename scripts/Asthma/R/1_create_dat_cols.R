@@ -219,7 +219,7 @@ AST1_DAT <- left_join(AST1_DAT, dplyr::select(dat, patid, ASTRES1_DAT, ACHV, QSS
 head(AST1_DAT)
 
 AST1_DAT <- AST1_DAT %>% filter(!is.na(ASTRES1_DAT)) %>% 
-  filter(obsdate >= ASTRES1_DAT) %>% arrange(patid, desc(obsdate)) %>% # latest after ASTRES1 
+  filter(obsdate >= ASTRES1_DAT) %>% arrange(patid, obsdate) %>% # earliest after ASTRES1 
   group_by(patid) %>% slice(1) %>% ungroup() %>% rename(AST1_DAT = obsdate) %>% 
   dplyr::select(patid, AST1_DAT)
 
