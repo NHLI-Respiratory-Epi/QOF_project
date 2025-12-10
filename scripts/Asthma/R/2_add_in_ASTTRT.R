@@ -2,6 +2,7 @@
 library(data.table)
 library(dplyr)
 library(bit64)
+library(parallel)
 
 dat <- readRDS("Z:/Group_work/QOF_project/Data/Asthma/cohort/1_cohort_asthma_with_DAT_cols.RDS")
 
@@ -76,7 +77,7 @@ bigdrugs <- rbindlist(bigdrugs)
 stopCluster(cl)
 
 
-bigdrugs <- bigdrugs %>% rename(ASTTRT_COD = issuedate)
+bigdrugs <- bigdrugs %>% rename(ASTTRT_DAT = issuedate)
 
 dat <- left_join(dat, bigdrugs, by = "patid")
 
