@@ -269,6 +269,49 @@ dplyr::mutate(ASTRES_DAT = if_else(ASTRES_COD_latest > ASTLAT_DAT,
      
 }
 
+smokmake_COPDRES_DAT <- function(df) {
+  
+  new_df <- df %>%
+    dplyr::mutate(COPDRES_DAT = if_else(COPDRES_COD_latest > COPDLAT_DAT, 
+                                       COPDRES_COD_latest, NA))
+  return(new_df)
+  
+}
+
+
+smokmake_DMRES_DAT <- function(df) {
+  
+  new_df <- df %>%
+    dplyr::mutate(DMRES_DAT = if_else(DMRES_COD_latest > DMLAT_DAT, 
+                                       DMRES_COD_latest, NA))
+  return(new_df)
+  
+}
+
+smokmake_HYPRES_DAT <- function(df) {
+  
+  new_df <- df %>%
+    dplyr::mutate(HYPRES_DAT = if_else(HYPRES_COD_latest > HYPLAT_DAT, 
+                                       HYPRES_COD_latest, NA))
+  return(new_df)
+  
+}
+
+smokmake_DIAG_DAT <- function(df) {
+  
+  new_df <- df %>%
+    dplyr::mutate(DIAG_DAT = min(CHD_DAT|PAD_DAT|STRK_DAT|TIA_DAT|HYP_DATifHYPRES_DAT)
+                    
+                    
+                    
+                    
+                    if_else(ASTRES_COD_latest > ASTLAT_DAT, 
+                                       ASTRES_COD_latest, NA))
+  return(new_df)
+  
+}
+
+
 
 
 # smokmake_ <- function(df) {
