@@ -28,7 +28,28 @@ dat <- dat %>% rename(AST_DAT = AST_COD_earliest,
                       # AST1_DAT needs to be created
                       # EUNRESAST_DAT needs to be created
                       SMOKEXPOS_DAT = SMOKEXPOS_COD_latest,
-                      NOSMOKEXPOS_DAT = NOSMOKEXPOS_COD_latest)
+                      NOSMOKEXPOS_DAT = NOSMOKEXPOS_COD_latest,
+                      MH_DAT = MH_COD_earliest,
+                      CKD_DAT = CKD_COD_latest,
+                      COPDLAT_DAT = COPD_COD_latest,
+                      COPD_DAT = COPD_COD_earliest,
+                      DMLAT_DAT = DM_COD_latest,
+                      DM_DAT = DM_COD_earliest,
+                      HYPLAT_DAT = HYP_COD_latest,
+                      HYP_DAT = HYP_COD_earliest,
+                      TIA_DAT = TIA_COD_earliest,
+                      STRK_DAT = STRK_COD_earliest,
+                      PAD_DAT = PAD_COD_earliest,
+                      CHD_DAT = CHD_COD_earliest,
+                      REG_DAT = regstartdate, #not sure if this is correct
+                      SMOKINVITE1_DAT = SMOKINVITE_COD_earliest_1yr,
+                      SMOKPCADEC_DAT = SMOKPCADEC_COD_latest,
+                      SMOKPCAPU_DAT = SMOKPCAPU_COD_latest,
+                      PHARMDRUG_DAT = PHARMDRUG_COD_latest,
+                      PHARM_DAT = PHARM_COD_latest,
+                      REFERSSSA_DAT = REFERSSSA_COD_latest,
+                      CSMOK_DAT = LSMOK_COD_latest
+                      )
 # field numbers 22 - 33 (aprt from rule 29) all still have to be created
 
 # First off - create AST_RES.
