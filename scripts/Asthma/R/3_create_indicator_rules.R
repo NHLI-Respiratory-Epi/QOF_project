@@ -123,8 +123,10 @@ sum(dat$AST007_nume)/sum(dat$AST007_denom) # Not bad!!!
 
 # denominator:
 
+summary(dat$PAT_AGE)
+
 dat <- dat %>% 
-  mutate(AST008_denom_RN1 = if_else(PAT_AGE > 19, 1, 0, missing = 0), # 1 = R, 0 = N,
+  mutate(AST008_denom_RN1 = if_else(floor(PAT_AGE) > 19, 1, 0, missing = 0), # 1 = R, 0 = N,
          AST008_denom_RN2 = if_else(SMOK_DAT >= QSSD, 1, 0, missing = 0), # 1 = S, 0 = N,
          AST008_denom_RN3 = if_else(SMOKEXPOS_DAT >= QSSD, 1, 0, missing = 0), # 1 = S, 0 = N,
          AST008_denom_RN4 = if_else(NOSMOKEXPOS_DAT >= QSSD, 1, 0, missing = 0), # 1 = S, 0 = N,
@@ -169,42 +171,53 @@ dat <- dat %>%
 
 sum(dat$AST008_nume)/sum(dat$AST008_denom) 
 
+# AST012*  (*but diagnosis reflects 1st April 2023, not 2025 as stated)
 
-# how do these people pass?
 
-dat %>% select(starts_with("AST008_nume")) %>% summary()
+# denominator
 
-dat %>% filter(AST008_denom ==1 & AST008_nume == 1) %>%
-  select(PAT_AGE, starts_with("AST008_nume")) %>% summary()
+dat <- dat %>% 
+  mutate(AST012_denom_RN1 = if_else(EUNRESAST_DAT >= "2023-04-01", 1, 0, missing = 0), # 1 = N, 0 = R
+         AST012_denom_RN2 = if_else(floor(PAT_AGE) > 16 &                # 1 = S, 0 = N
+                                      (FBC_DAT <= EUNRESAST_DAT + 93 |
+                                         FENODIAG_DAT <= EUNRESAST_DAT + 93 | 
+                                         ASTSPIRDIAG_DAT <= EUNRESAST_DAT + 93 | 
+                                         (!is.na(SPIRPCASU_DAT) & PEFRVAR_DAT <= EUNRESAST_DAT + 93) |
+                                         BRONCCHALENG_DAT <= EUNRESAST_DAT + 93), 1, 0, missing = 0),
+         AST012_denom_RN3 = if_else(floor(PAT_AGE) >= 5 & floor(PAT_AGE) <= 16 & # 1 = S, 0 = N
+                                      (FENODIAG_DAT <= EUNRESAST_DAT + 93 |
+                                      ASTSPIRDIAG_DAT <= EUNRESAST_DAT + 93 |
+                                      (!is.na(SPIRPCASU_DAT) & PEFRVAR_DAT <= EUNRESAST_DAT + 93) |
+                                      SKINTEST_DAT <= EUNRESAST_DAT + 93 |
+                                      (IGE_DAT <= EUNRESAST_DAT + 93 & FBC_DAT <= EUNRESAST_DAT + 93) |
+                                      BRONCCHALENG_DAT <= EUNRESAST_DAT + 93), 1, 0, missing = 0),
+         AST012_denom_RN4 = if_else(ASTPCAPU_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N,
+         AST012_denom_RN5 = if_else(ASTMONDEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N,
+         AST012_denom_RN6 = if_else(ASTPCADEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N,
+         AST012_denom_RN7 = if_else(!is.na(ASTINVITE1_DAT) & !is.na(ASTINVITE2_DAT), 1, 0, missing = 0), # 1 = R, 0 = N
+         AST012_denom_RN8 = if_else(AST_DAT >= ACHV - 93, 1, 0, missing = 0), # 1 = R, 0 = N
+         AST012_denom_RN9 = if_else(regstartdate >= ACHV - 93, 1, 0, missing = 0)) # 1 = R, 0 = S
 
-dat %>% filter(floor(PAT_AGE) == 6) %>%   filter(AST008_denom ==1 & AST008_nume == 1) %>%
-  select(PAT_AGE, starts_with("AST008_nume")) %>% summary()
+dat <- dat %>% mutate(AST012_denom = if_else(AST_REG == 1 & AST012_denom_RN1 == 1 & # registered and meets age criteria and
+                                               (AST012_denom_RN2 == 1 |   # meets QI criteria for >16s or
+                                                  AST012_denom_RN3 == 1 | # meets QI criteria for 5-16s or
+                                                  (AST012_denom_RN4 == 0 & # or is not ejected by this process
+                                                     AST012_denom_RN5 == 0 &
+                                                     AST012_denom_RN6 == 0 &
+                                                     AST012_denom_RN7 == 0 &
+                                                     AST012_denom_RN8 == 0 &
+                                                     AST012_denom_RN9 == 0)), 1, 0, missing = 0))
+# numerator is just rule 2 and 3 of denominator
 
-dat %>% filter(floor(PAT_AGE) %in% 6:12) %>%   filter(AST008_nume == 1) %>%
-  filter(AST008_nume_RN2 == 0 & AST008_nume_RN3 == 0) %>% nrow()
+dat <- dat %>% mutate(AST012_nume_RN1 = AST012_denom_RN2,
+                      AST012_nume_RN2 = AST012_denom_RN3)
 
-dat %>% filter(floor(PAT_AGE) %in% 6:12) %>%   filter(AST008_nume == 1) %>%
-  filter(AST008_nume_RN2 == 1 | AST008_nume_RN3 == 1) %>% nrow()
+dat <- dat %>% mutate(AST012_nume = if_else(AST_REG == 1 & AST012_denom == 1 &
+                                              (AST012_nume_RN1 == 1 | AST012_nume_RN2), 1, 0, missing = 0))
 
-# who passed the quality indicator for children's asthma
-# but did not record a secondhand smoking status
+# the big reveal...
+sum(dat$AST012_nume)/sum(dat$AST012_denom)
 
-# SMOK_DAT is just the latest smoking status so we can see which status they had
-# by matching up the date with non/current/ex COD
+# dat %>% filter(AST_REG == 1) %>% select(AST_REG, AST007_nume, AST007_denom, AST008_nume, AST008_denom, AST012_nume, AST012_denom) %>% summary()
 
-colnames(dat)
-
-smoking <- dat %>% filter(AST008_nume == 1) %>%
-  filter(AST008_nume_RN2 == 0 & AST008_nume_RN3 == 0) %>%
-  select(PAT_AGE, SMOK_DAT, NSMOK_COD_latest, EXSMOK_COD_latest, LSMOK_COD_latest)
-
-smoking <- smoking %>% mutate(
-  smoking_matches_never = if_else(SMOK_DAT == NSMOK_COD_latest,
-                                  1, 0, missing = 0),
-  smoking_matches_ex = if_else(SMOK_DAT == EXSMOK_COD_latest,
-                               1, 0, missing = 0),
-  smoking_matches_current = if_else(SMOK_DAT == LSMOK_COD_latest,
-                                    1, 0, missing = 0))
-
-summary(smoking)
-
+saveRDS(dat, "Z:/Group_work/QOF_project/Data/Asthma/cohort/3_cohort_asthma_with_AST_indicators.RDS")
