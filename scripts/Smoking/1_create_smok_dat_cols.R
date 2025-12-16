@@ -46,7 +46,7 @@ dat <- dat %>% rename(AST_DAT = AST_COD_earliest,
                       CKD1AND2_DAT = CKD1AND2_COD_latest
                       )
 
-dat <- dat %>% mutate(PPED = "2026-03-31",
+dat <- dat %>% mutate(PPED = ACHV,
                       ASTRES_DAT = if_else(ASTRES_COD_latest > ASTLAT_DAT, 
                                            ASTRES_COD_latest, NA),
                       COPDRES_DAT = if_else(COPDRES_COD_latest > COPDLAT_DAT, 

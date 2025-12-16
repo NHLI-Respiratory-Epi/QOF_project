@@ -300,16 +300,16 @@ smokmake_HYPRES_DAT <- function(df) {
 smokmake_DIAG_DAT <- function(df) {
   
   new_df <- df %>%
-    dplyr::mutate(DIAG_DAT = min(CHD_DAT|PAD_DAT|STRK_DAT|TIA_DAT|HYP_DATifHYPRES_DAT)
-                    
-                    
-                    
+    dplyr::mutate(DIAG_DAT = min(CHD_DAT|PAD_DAT|STRK_DAT|TIA_DAT|HYP_DATifHYPRES_DAT),
                     
                     if_else(ASTRES_COD_latest > ASTLAT_DAT, 
                                        ASTRES_COD_latest, NA))
   return(new_df)
   
 }
+
+
+
 
 
 
