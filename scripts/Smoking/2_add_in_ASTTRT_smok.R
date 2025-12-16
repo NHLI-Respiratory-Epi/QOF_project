@@ -5,8 +5,12 @@ library(parallel)
 
 dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/1_cohort_smoking_with_DAT_cols.RDS")
 
-dat %>% select(starts_with(c("ASTTRT", "PHARMDRUG"))) %>% colnames() # these columns are wrong
-dat <- dat %>% select(!(starts_with(c("ASTTRT", "PHARMDRUG")))) # remove the erroneous columns
+dat %>% select(starts_with(c("ASTTRT"
+ #                            , "PHARMDRUG"
+                             ))) %>% colnames() # these columns are wrong
+dat <- dat %>% select(!(starts_with(c("ASTTRT"
+ #                                     , "PHARMDRUG"
+ )))) # remove the erroneous columns
 
 # drugs codelists
 codes_drugs <- readRDS("Z:/Group_work/QOF_project/Alex/QOF_project/codelists/all/drugscodes.RDS")
@@ -80,5 +84,5 @@ bigdrugs <- bigdrugs %>% rename(ASTTRT_DAT = issuedate)
 
 dat <- left_join(dat, bigdrugs, by = "patid")
 
-saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/2_cohort_smoking_with_correct_DAT_cols.RDS")
+dat <- saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/2_cohort_smoking_with_correct_DAT_cols.RDS")
 

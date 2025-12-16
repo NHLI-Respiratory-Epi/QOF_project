@@ -13,6 +13,8 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/2_cohort_smoking_w
 # S = select
 # N = next rule
 
+
+
 # SMOK1_REG
 
 dat <- dat %>% mutate(SMOK1_REG_RN1 = if_else(!is.na(CHD_DAT)|
@@ -43,13 +45,13 @@ dat <- dat %>% mutate(SMOK2_REG = ifelse(SMOK2_REG_RN1 == 1, 1, 0))
 
 dat <- dat %>% 
   mutate(SMOK004_denom_RN1 = if_else(is.na(CSMOK_DAT), 1, 0, missing = 0), # 1 = R, 0 = N
-         SMOK004_denom_RN2 = if_else(REFERSSSA_DAT >= PPED - 365.25*2|
-                                     PHARM_DAT >= PPED - 365.25*2|
-                                     PHARMDRUG_DAT >= PPED - 365.25*2, 1, 0, missing = 0), # 1 = R, 0 = N
+         SMOK004_denom_RN2 = if_else(REFERSSSA_DAT >= ACHV - 365.25*2|
+                                     PHARM_DAT >= ACHV - 365.25*2|
+                                     PHARMDRUG_DAT >= ACHV - 365.25*2, 1, 0, missing = 0), # 1 = S, 0 = N
          SMOK004_denom_RN3 = if_else(SMOKPCAPU_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N
          SMOK004_denom_RN4 = if_else(SMOKPCADEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N
          SMOK004_denom_RN5 = if_else(!is.na(SMOKINVITE1_DAT) & !is.na(SMOKINVITE2_DAT), 1, 0, missing = 0), # 1 = R, 0 = N
-         SMOK004_denom_RN6 = if_else(REG_DAT >= PPED - 93, 1, 0, missing = 0)) # 1 = R, 0 = S
+         SMOK004_denom_RN6 = if_else(REG_DAT >= ACHV - 93, 1, 0, missing = 0)) # 1 = R, 0 = S
 
 # create the final indicator denominator
 
@@ -65,11 +67,11 @@ dat <- dat %>% mutate(SMOK004_denom = if_else(SMOK2_REG == 1 &
 
 
 
-# numerator is the first rule of the denominator! 
+# numerator is the 2nd rule of the denominator! 
 
 dat <- dat %>% mutate(SMOK004_nume = SMOK004_denom_RN2)
 
-# and the big reveal for quality indicator prevalence........
+# quality indicator prevalence........
 
 sum(dat$SMOK004_nume)/sum(dat$SMOK004_denom) 
 
@@ -101,17 +103,12 @@ dat <- dat %>% mutate(SMOK005_denom = if_else(SMOK1_REG == 1 &
                                               1, 0, missing = 0))
 
 
-# numerator is the first rule of the denominator! 
+# numerator is the 2nd rule of the denominator! 
 
 dat <- dat %>% mutate(SMOK005_nume = SMOK005_denom_RN2)
 
-# and the big reveal for quality indicator prevalence........
+# quality indicator prevalence........
 
 sum(dat$SMOK005_nume)/sum(dat$SMOK005_denom)
-
-
-### 3 months is 93 days
-# PPED = ACHV
-# PPED - 1 year = QSSD
 
 
