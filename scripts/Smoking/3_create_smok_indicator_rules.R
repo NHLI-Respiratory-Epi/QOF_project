@@ -45,13 +45,14 @@ dat <- dat %>% mutate(SMOK2_REG = ifelse(SMOK2_REG_RN1 == 1, 1, 0))
 
 dat <- dat %>% 
   mutate(SMOK004_denom_RN1 = if_else(is.na(CSMOK_DAT), 1, 0, missing = 0), # 1 = R, 0 = N
-         SMOK004_denom_RN2 = if_else(REFERSSSA_DAT >= ACHV - 365.25*2|
-                                     PHARM_DAT >= ACHV - 365.25*2|
-                                     PHARMDRUG_DAT >= ACHV - 365.25*2, 1, 0, missing = 0), # 1 = S, 0 = N
+         SMOK004_denom_RN2 = if_else((!is.na(REFERSSSA_DAT) & (REFERSSSA_DAT >= ACHV - 365.25*2))|
+                                     (!is.na(PHARM_DAT) & (PHARM_DAT >= ACHV - 365.25*2))|
+                                     (!is.na(PHARMDRUG_DAT) & (PHARMDRUG_DAT >= ACHV - 365.25*2)),
+                                     1, 0, missing = NA_real_), # 1 = S, 0 = N
          SMOK004_denom_RN3 = if_else(SMOKPCAPU_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N
          SMOK004_denom_RN4 = if_else(SMOKPCADEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N
-         SMOK004_denom_RN5 = if_else(!is.na(SMOKINVITE1_DAT) & !is.na(SMOKINVITE2_DAT), 1, 0, missing = 0), # 1 = R, 0 = N
-         SMOK004_denom_RN6 = if_else(REG_DAT >= ACHV - 93, 1, 0, missing = 0)) # 1 = R, 0 = S
+         SMOK004_denom_RN5 = if_else(!is.na(SMOKINVITE1_DAT) & !is.na(SMOKINVITE2_DAT), 1, 0, missing = NA_real_), # 1 = R, 0 = N
+         SMOK004_denom_RN6 = if_else(REG_DAT >= ACHV - 93, 1, 0, missing = NA_real_)) # 1 = R, 0 = S
 
 # create the final indicator denominator
 
@@ -104,6 +105,13 @@ dat <- dat %>%
 
 sum(dat$SMOK004_nume)/sum(dat$SMOK004_denom) 
 
+
+dat %>%
+  filter(SMOK2_REG == 1) %>%
+  group_by(SMOK004_denominator,
+           SMOK004_numerator) %>%
+  summarise(freq = n())
+
 sum(dat$SMOK004_numerator, na.rm = TRUE)/sum(dat$SMOK004_denominator) 
 
 
@@ -111,9 +119,10 @@ sum(dat$SMOK004_numerator, na.rm = TRUE)/sum(dat$SMOK004_denominator)
 
 dat <- dat %>% 
   mutate(SMOK005_denom_RN1 = if_else(is.na(CSMOK_DAT), 1, 0, missing = 0), # 1 = R, 0 = N
-         SMOK005_denom_RN2 = if_else(REFERSSSA_DAT >= (QSSD)|
-                                       PHARM_DAT >= (QSSD)|
-                                       PHARMDRUG_DAT >= (QSSD), 1, 0, missing = 0), # 1 = R, 0 = N
+         SMOK005_denom_RN2 = if_else((!is.na(REFERSSSA_DAT) & REFERSSSA_DAT >= (QSSD))|
+                                       (!is.na(PHARM_DAT) & PHARM_DAT >= (QSSD))|
+                                       (!is.na(PHARMDRUG_DAT) & PHARMDRUG_DAT >= (QSSD)),
+                                     1, 0, missing = NA_real_), # 1 = R, 0 = N
          SMOK005_denom_RN3 = if_else(SMOKPCAPU_DAT >= (QSSD), 1, 0, missing = 0), # 1 = R, 0 = N
          SMOK005_denom_RN4 = if_else(SMOKPCADEC_DAT >= (QSSD), 1, 0, missing = 0), # 1 = R, 0 = N
          SMOK005_denom_RN5 = if_else(!is.na(SMOKINVITE1_DAT) & !is.na(SMOKINVITE2_DAT), 1, 0, missing = 0), # 1 = R, 0 = N
