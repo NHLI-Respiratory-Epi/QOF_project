@@ -64,6 +64,25 @@ dat <- dat %>% mutate(SMOK004_denom = if_else(SMOK2_REG == 1 &
                                                    SMOK004_denom_RN6 == 1)), 
                                              1, 0, missing = 0))
 
+# There are two ways a patient can be selected into the denominator:
+# In both cases, the patient must not be rejected at rule no. 1 (i.e. they must
+# be a current smoker either way). Then they can either...
+# A) Be selected in rule 2 (through having received the care standard) OR
+# B) Be passed through rules 2, 3, 4, and 5, and then meet the criteria for
+# selection in rule 6.
+
+dat <- dat %>% mutate(SMOK004_denominator = if_else(
+  SMOK2_REG == 1 &                    # In population register AND
+    (SMOK004_denom_RN1 == 0 &         # Have status "current smoker" AND
+       (SMOK004_denom_RN2 == 1 |      # (A) Meet RN2 selection criterion OR...
+          (SMOK004_denom_RN2 == 0 &   # ...
+             SMOK004_denom_RN3 == 0 & # ...
+             SMOK004_denom_RN4 == 0 & # ...
+             SMOK004_denom_RN5 == 0 & # ...
+             SMOK004_denom_RN6 == 0)  # ... (B) make it through RN3-6
+       )), 
+  1, 0, missing = 0))
+
 
 
 
@@ -71,10 +90,21 @@ dat <- dat %>% mutate(SMOK004_denom = if_else(SMOK2_REG == 1 &
 
 dat <- dat %>% mutate(SMOK004_nume = SMOK004_denom_RN2)
 
+# The numerator is applied to patients selected into the denominator
+
+dat <- dat %>%
+  mutate(SMOK004_numerator = case_when(
+    SMOK004_denominator == 0 ~ NA_integer_,
+    SMOK004_denom_RN2 == 1 ~ 1L,
+    SMOK004_denom_RN2 == 0 ~ 0L,
+    TRUE ~ NA_integer_
+  ))
+
 # quality indicator prevalence........
 
 sum(dat$SMOK004_nume)/sum(dat$SMOK004_denom) 
 
+sum(dat$SMOK004_numerator, na.rm = TRUE)/sum(dat$SMOK004_denominator) 
 
 
 ### INDICATOR 005 ###
