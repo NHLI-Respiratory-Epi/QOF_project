@@ -129,16 +129,6 @@ dat <- dat %>%
 
 # create the final indicator denominator
 
-dat <- dat %>% mutate(SMOK005_denom = if_else(SMOK1_REG == 1 & 
-                                                (SMOK005_denom_RN1 == 1 | (
-                                                  SMOK005_denom_RN2 == 0 &
-                                                    SMOK005_denom_RN3 == 1 &
-                                                    SMOK005_denom_RN4 == 1 &
-                                                    SMOK005_denom_RN5 == 1 &
-                                                    SMOK005_denom_RN6 == 1 &
-                                                    SMOK005_denom_RN7 == 1)), 
-                                              1, 0, missing = 0))
-
 dat <- dat %>% mutate(SMOK005_denominator = if_else(
   SMOK1_REG == 1 &                    # In population register AND
     (SMOK005_denom_RN1 == 0 &         # Have status "current smoker" AND
@@ -151,11 +141,6 @@ dat <- dat %>% mutate(SMOK005_denominator = if_else(
        )), 
   1, 0, missing = 0))
 
-
-# numerator is the 2nd rule of the denominator! 
-
-dat <- dat %>% mutate(SMOK005_nume = SMOK005_denom_RN2)
-
 # The numerator is applied to patients selected into the denominator
 
 dat <- dat %>%
@@ -167,7 +152,5 @@ dat <- dat %>%
   ))
 
 # quality indicator prevalence........
-
-sum(dat$SMOK005_nume)/sum(dat$SMOK005_denom)
 
 sum(dat$SMOK005_numerator, na.rm = TRUE)/sum(dat$SMOK005_denominator) 
