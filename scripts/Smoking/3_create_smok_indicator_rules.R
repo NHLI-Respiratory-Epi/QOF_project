@@ -13,7 +13,9 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/2_cohort_smoking_w
 # S = select
 # N = next rule
 
-
+# Ensure all patients have GMS registration status
+dat <- dat %>%
+  filter((!is.na(REG_DAT) & is.na(regenddate)) | (!is.na(REG_DAT) & regenddate > ACHV))
 
 # SMOK1_REG
 
@@ -54,16 +56,6 @@ dat <- dat %>%
          SMOK004_denom_RN5 = if_else(!is.na(SMOKINVITE1_DAT) & !is.na(SMOKINVITE2_DAT), 1, 0, missing = NA_real_), # 1 = R, 0 = N
          SMOK004_denom_RN6 = if_else(REG_DAT >= ACHV - 93, 1, 0, missing = NA_real_)) # 1 = R, 0 = S
 
-# create the final indicator denominator
-
-dat <- dat %>% mutate(SMOK004_denom = if_else(SMOK2_REG == 1 & 
-                                               (SMOK004_denom_RN1 == 1 | (
-                                                 SMOK004_denom_RN2 == 0 &
-                                                   SMOK004_denom_RN3 == 1 &
-                                                   SMOK004_denom_RN4 == 1 &
-                                                   SMOK004_denom_RN5 == 1 &
-                                                   SMOK004_denom_RN6 == 1)), 
-                                             1, 0, missing = 0))
 
 # There are two ways a patient can be selected into the denominator:
 # In both cases, the patient must not be rejected at rule no. 1 (i.e. they must
@@ -73,23 +65,16 @@ dat <- dat %>% mutate(SMOK004_denom = if_else(SMOK2_REG == 1 &
 # selection in rule 6.
 
 dat <- dat %>% mutate(SMOK004_denominator = if_else(
-  SMOK2_REG == 1 &                    # In population register AND
-    (SMOK004_denom_RN1 == 0 &         # Have status "current smoker" AND
-       (SMOK004_denom_RN2 == 1 |      # (A) Meet RN2 selection criterion OR...
-          (SMOK004_denom_RN2 == 0 &   # ...
-             SMOK004_denom_RN3 == 0 & # ...
-             SMOK004_denom_RN4 == 0 & # ...
-             SMOK004_denom_RN5 == 0 & # ...
-             SMOK004_denom_RN6 == 0)  # ... (B) make it through RN3-6
+  (SMOK2_REG == 1) &                    # In population register AND
+    ((SMOK004_denom_RN1 == 0) &         # Have status "current smoker" AND
+       ((SMOK004_denom_RN2 == 1) |      # (A) Meet RN2 selection criterion OR...
+          ((SMOK004_denom_RN2 == 0) &   # ...
+             (SMOK004_denom_RN3 == 0) & # ...
+             (SMOK004_denom_RN4 == 0) & # ...
+             (SMOK004_denom_RN5 == 0) & # ...
+             (SMOK004_denom_RN6 == 0))  # ... (B) make it through RN3-6
        )), 
   1, 0, missing = 0))
-
-
-
-
-# numerator is the 2nd rule of the denominator! 
-
-dat <- dat %>% mutate(SMOK004_nume = SMOK004_denom_RN2)
 
 # The numerator is applied to patients selected into the denominator
 
@@ -103,9 +88,6 @@ dat <- dat %>%
 
 # quality indicator prevalence........
 
-sum(dat$SMOK004_nume)/sum(dat$SMOK004_denom) 
-
-
 dat %>%
   filter(SMOK2_REG == 1) %>%
   group_by(SMOK004_denominator,
@@ -114,6 +96,22 @@ dat %>%
 
 sum(dat$SMOK004_numerator, na.rm = TRUE)/sum(dat$SMOK004_denominator) 
 
+
+# Explore where the numbers go
+smok2_reg_dat <- dat %>%
+  filter(SMOK2_REG == 1)
+
+smok2_reg_cs_dat <- smok2_reg_dat %>%
+  filter(SMOK004_denom_RN1 == 0)
+
+denom_rule_summary <- smok2_reg_cs_dat %>%
+  group_by(SMOK004_denom_RN2,
+           SMOK004_denom_RN3,
+           SMOK004_denom_RN4,
+           SMOK004_denom_RN5,
+           SMOK004_denom_RN6
+  ) %>%
+  summarise(freq = n())
 
 ### INDICATOR 005 ###
 
