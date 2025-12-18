@@ -85,35 +85,6 @@ rds_dir <- "X:/QOF_project/Data/tidy_data/RDS/"
 
 obs_files <- list.files(rds_dir)[grepl("Observation", list.files(rds_dir)) == TRUE] 
 
-# pipe for when we want to return multiple instances of a code
-
-multiextract_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", codes, cluster_id, newcolname) {
-  
-  obs <- readRDS(paste0(rds_dir, obsfile))
-  EXTRACT_COD <- codes %>% filter(Cluster_ID == cluster_id) %>% 
-    dplyr::pull(snomedctconceptid) %>% unique()
-  
-  
-  
-  obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
-  obs <- obs[ , .(patid, obsdate)]
-  obs <- unique(obs)
-  
-  obs <- dcast(
-    obs[order(patid, obsdate)],
-    patid ~ rowid(patid),
-    value.var = "obsdate"
-  )
-  
-  setnames(obs, old = names(obs)[-1],
-           new = paste0(newcolname, "_", names(obs)[-1]))
-  
-  return(obs)
-  
-}
-
-
 detectCores()
 ncores <- 24
 
@@ -127,14 +98,6 @@ clusterEvalQ(cl, { # these need to be read into each cluster
   library(dplyr)
   library(bit64)
 })
-
-
-
-# these R objects are necessary in each cluster
-clusterExport(cl, varlist = c("obs_files", "rds_dir", "multiextract_pipe", "codes"), 
-              envir = environment())
-
-
 
 #Creating SMOKINVITE2_DAT
 
@@ -160,7 +123,7 @@ SMOKINVITE2_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_da
 }
 
 
-clusterExport(cl, varlist = c("obs_files", "rds_dir", "multiextract_pipe", "SMOKINVITE2_DAT_pipe", "codes"), 
+clusterExport(cl, varlist = c("obs_files", "rds_dir", "SMOKINVITE2_DAT_pipe", "codes"), 
               envir = environment())
 
 
@@ -169,25 +132,23 @@ SMOKINVITE2_DAT_big <- parLapply(cl, obs_files, SMOKINVITE2_DAT_pipe, codes = co
 SMOKINVITE2_DAT <- rbindlist(SMOKINVITE2_DAT_big)
 SMOKINVITE2_DAT <- unique(SMOKINVITE2_DAT)
 
-
-
-# SMOKINVITE2_DAT %>% group_by(patid) %>% slice(1) %>% nrow()
-# dat %>% filter(!is.na(SMOKINVITE1_DAT)) %>% nrow()
-
-
 # join with subsection of our cohort
 
 SMOKINVITE2_DAT <- left_join(SMOKINVITE2_DAT, dplyr::select(dat, patid, SMOKINVITE1_DAT, ACHV, QSSD), by = "patid")
 
-SMOKINVITE2_DAT <- SMOKINVITE2_DAT %>% filter(!is.na(SMOKINVITE1_DAT)) %>% 
-  filter(obsdate >= SMOKINVITE1_DAT + 7) %>% arrange(patid, obsdate) %>% 
-  group_by(patid) %>% slice(1) %>% ungroup() %>% rename(SMOKINVITE2_DAT = obsdate) %>% 
+SMOKINVITE2_DAT <- SMOKINVITE2_DAT %>% 
+  filter(!is.na(SMOKINVITE1_DAT)) %>% 
+  filter(obsdate >= SMOKINVITE1_DAT + 7) %>% 
+  arrange(patid, obsdate) %>% 
+  group_by(patid) %>% 
+  slice(1) %>%
+  ungroup() %>% 
+  rename(SMOKINVITE2_DAT = obsdate) %>% 
   dplyr::select(patid, SMOKINVITE2_DAT)
 
 # bind it into our cohort
 
 dat <- left_join(dat, SMOKINVITE2_DAT, by = "patid")
-
 
 
 # Save the cohort!!!!
