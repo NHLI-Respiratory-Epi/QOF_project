@@ -16,7 +16,7 @@ dat <- dat %>% rename(AST_DAT = AST_COD_earliest,
                       SMOK_DAT = SMOK_COD_latest,
                       ASTLAT_DAT = AST_COD_latest,
                       # ASTRES_DAT needs to be created
-                      ASTTRT_DAT = ASTTRT_COD_latest_1yr,
+                      # ASTTRT_DAT = ASTTRT_COD_latest_1yr, ASTTRT_COD is incorrect
                       ASTINVITE1_DAT = ASTINVITE_COD_earliest_1yr,
                       ASTMONDEC_DAT = ASTMONDEC_COD_latest,
                       ASTPCADEC_DAT = ASTPCADEC_COD_latest,
@@ -42,15 +42,32 @@ dat <- dat %>% rename(AST_DAT = AST_COD_earliest,
                       PHARMDRUG_DAT = PHARMDRUG_COD_latest,
                       PHARM_DAT = PHARM_COD_latest,
                       REFERSSSA_DAT = REFERSSSA_COD_latest,
-                      CSMOK_DAT = LSMOK_COD_latest,
-                      CKD1AND2_DAT = CKD1AND2_COD_latest
-                      )
+                      LSMOK_DAT = LSMOK_COD_latest) 
+
+# NSMOK_DAT, CSMOK_DAT, and LEXSMOK_DAT need to be created by matching with SMOK_DAT
+# given that we've got the latest of all of them, we can just do it in a similar way
+# to the creation of the 'resolved' codes
+
+
+dat <- dat %>% 
+  mutate(NSMOK_DAT = if_else(NSMOK_COD_latest == SMOK_DAT, 
+                             NSMOK_COD_latest, NA),
+         CSMOK_DAT = if_else(LSMOK_DAT == SMOK_DAT, # (LSMOK_DAT was renamed from LSMOK_COD_latest) 
+                             LSMOK_DAT, NA),
+         LEXSMOK_DAT = if_else(EXSMOK_COD_latest == SMOK_DAT, 
+                               EXSMOK_COD_latest, NA))
+
+
+
+# NOTE: ex-smoker variables 41-46 not created but not needed for our current QIs of interest
 
 dat <- dat %>% mutate(PPED = ACHV,
                       ASTRES_DAT = if_else(ASTRES_COD_latest > ASTLAT_DAT, 
                                            ASTRES_COD_latest, NA),
                       COPDRES_DAT = if_else(COPDRES_COD_latest > COPDLAT_DAT, 
                                             COPDRES_COD_latest, NA),
+                      CKD1AND2_DAT = if_else(CKD1AND2_COD_latest > CKD_DAT, # needs to be made here 
+                                             CKD1AND2_COD_latest, NA), 
                       CKDRES_DAT = if_else(CKDRES_COD_latest > CKD_DAT, 
                                            CKDRES_COD_latest, NA),
                       DMRES_DAT = if_else(DMRES_COD_latest > DMLAT_DAT, 
@@ -58,23 +75,6 @@ dat <- dat %>% mutate(PPED = ACHV,
                       HYPRES_DAT = if_else(HYPRES_COD_latest > HYPLAT_DAT, 
                                            HYPRES_COD_latest, NA),
                       )
-
-dat <- dat %>% mutate(DIAG_DAT = min(CHD_DAT,
-                                     PAD_DAT,
-                                     STRK_DAT,
-                                     TIA_DAT,
-                                     MH_DAT,
-                                     if_else(is.na(HYPRES_DAT),HYP_DAT, as.Date(NA)),
-                                     if_else(is.na(DMRES_DAT) & PAT_AGE >= 17,DM_DAT, as.Date(NA)),
-                                     if_else(is.na(COPDRES_DAT), COPD_DAT, as.Date(NA)),
-                                     if_else(is.na(ASTRES_DAT)&
-                                            !is.na(ASTTRT_DAT)&
-                                              PAT_AGE >= 20, AST_DAT, as.Date(NA)),
-                                     if_else(is.na(CKDRES_DAT)&
-                                             is.na(CKD1AND2_DAT)&
-                                              PAT_AGE >= 18, CKD_DAT, as.Date(NA)),
-                                     na.rm = TRUE))
-
 
 
 
@@ -153,6 +153,6 @@ dat <- left_join(dat, SMOKINVITE2_DAT, by = "patid")
 
 # Save the cohort!!!!
 
-dat <- saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/1_cohort_smoking_with_DAT_cols.RDS")
+saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/1_cohort_smoking_with_DAT_cols.RDS")
 
 stopCluster(cl)

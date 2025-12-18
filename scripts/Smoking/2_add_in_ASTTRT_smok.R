@@ -128,5 +128,25 @@ dat <- left_join(dat,
                  by = "patid")
 
 
-dat <- saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/2_cohort_smoking_with_correct_DAT_cols.RDS")
+# ASTTRT is used in the creation of DIAG DAT, so DIAG DAT can only be created 
+# after the correct ASTTRT has been created
+
+dat <- dat %>% mutate(DIAG_DAT = pmin(CHD_DAT,
+                                     PAD_DAT,
+                                     STRK_DAT,
+                                     TIA_DAT,
+                                     MH_DAT,
+                                     if_else(is.na(HYPRES_DAT),HYP_DAT, as.Date(NA)),
+                                     if_else(is.na(DMRES_DAT) & PAT_AGE >= 17,DM_DAT, as.Date(NA)),
+                                     if_else(is.na(COPDRES_DAT), COPD_DAT, as.Date(NA)),
+                                     if_else(is.na(ASTRES_DAT)&
+                                               !is.na(ASTTRT_DAT)&
+                                               PAT_AGE >= 20, AST_DAT, as.Date(NA)),
+                                     if_else(is.na(CKDRES_DAT)&
+                                               is.na(CKD1AND2_DAT)&
+                                               PAT_AGE >= 18, CKD_DAT, as.Date(NA)),
+                                     na.rm = TRUE))
+
+
+saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/2_cohort_smoking_with_correct_DAT_cols.RDS")
 
