@@ -154,3 +154,10 @@ dat <- dat %>%
 # quality indicator prevalence........
 
 sum(dat$SMOK005_numerator, na.rm = TRUE)/sum(dat$SMOK005_denominator) 
+
+
+# Save the cohort!!!!
+
+dat <- saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_with_rules.RDS")
+
+
