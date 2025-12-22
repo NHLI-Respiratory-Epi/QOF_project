@@ -9,12 +9,11 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/4_cohort_smoking_w
 
 
 dat <- dat %>% 
-  mutate(SMOK004_num_refersssa = if_else((!is.na(REFERSSSA_DAT) & (REFERSSSA_DAT >= ACHV - 365.25*2)),
+  mutate(SMOK004_num_refersssa = if_else((SMOK004_denom_RN1 == 0) & (!is.na(REFERSSSA_DAT) & (REFERSSSA_DAT >= ACHV - 365.25*2)),
                                          1L, 0L, missing = NA_real_)) 
 
-
 dat <- dat %>% 
-  mutate(SMOK005_num_refersssa = if_else((!is.na(REFERSSSA_DAT) & REFERSSSA_DAT >= (QSSD)),
+  mutate(SMOK005_num_refersssa = if_else((SMOK004_denom_RN1 == 0) & (!is.na(REFERSSSA_DAT) & REFERSSSA_DAT >= (QSSD)),
                                          1L, 0L, missing = NA_real_)) 
 
 
