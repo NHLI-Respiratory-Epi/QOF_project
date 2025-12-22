@@ -4,22 +4,22 @@ library(bit64)
 library(readr)
 
 
-dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/4_cohort_smoking_with_refersssa_cols.RDS")
+dat_005 <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/4_cohort_smoking_with_refersssa_cols.RDS")
+dat_004 <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/4a_cohort_smoking_with_refersssa_cols.RDS")
 
 
-
-dat <- dat %>% 
+dat_004 <- dat_004 %>% 
   mutate(SMOK004_num_refersssa = if_else((SMOK004_denom_RN1 == 0) & (!is.na(REFERSSSA_DAT) & (REFERSSSA_DAT >= ACHV - 365.25*2)),
                                          1L, 0L, missing = NA_real_)) 
 
-dat <- dat %>% 
+dat_005 <- dat_005 %>% 
   mutate(SMOK005_num_refersssa = if_else((SMOK004_denom_RN1 == 0) & (!is.na(REFERSSSA_DAT) & REFERSSSA_DAT >= (QSSD)),
                                          1L, 0L, missing = NA_real_)) 
 
 
 ##### SMOK004 numerator based on REFERSSSA criteria only
 
-pop_004 <- dat %>%
+pop_004 <- dat_004 %>%
   filter(SMOK2_REG == 1L,
     SMOK004_num_refersssa == 1L)
 
@@ -27,7 +27,7 @@ pop_004 %>%
   summarise(n_unique_patids = n_distinct(patid))
 ##### SMOK005 numerator based on REFERSSSA criteria only
 
-pop_005 <- dat %>%
+pop_005 <- dat_005 %>%
   filter(SMOK1_REG == 1L,
          SMOK005_num_refersssa == 1L)
 
