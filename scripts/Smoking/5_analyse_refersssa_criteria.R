@@ -2,6 +2,7 @@ library(dplyr)
 library(data.table)
 library(bit64)
 library(readr)
+library(purrr)
 
 
 dat_005 <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/4_cohort_smoking_with_refersssa_cols.RDS")
@@ -274,16 +275,90 @@ pop_005_match4 <- pop_005_match4 %>% mutate(true_SCS_given = as.integer(
 table(pop_004_match4$true_SCS_given)
 table(pop_005_match4$true_SCS_given)
 
+
+###### matching function for declined columns
+pop_004_match_declined <- pop_004 %>%
+  filter(if_any(contains("declined"), ~ !is.na(.x)))
+
+pop_005_match_declined <- pop_005 %>%
+  filter(if_any(contains("declined"), ~ !is.na(.x)))
+
+
+REF_match_function_declined <- function(cohort, column_name, include_temp_cols = FALSE) {
+  cohort <- cohort %>%
+    mutate(
+      SCE_dec_match = as.integer(
+        if_any(
+          contains("declined"),
+          ~ .x == .data[[column_name]]
+        )
+      ),
+      pass = if_else(
+        SCE_dec_match == 1L, 1L, 0L, missing = 0L
+      )
+    ) %>%
+    rename_with(~ paste0(column_name, "_dec_pass"), pass)
+  
+  if (include_temp_cols == FALSE) {
+    cohort <- cohort %>%
+      select(-SCE_dec_match)
+  }
+  
+  cohort
+}
+
+# then, apply the function to every column but the _declined columns
+
+edu_or_service_cols <- names(pop_004_match_declined) %>% 
+  keep(~ grepl("^(SCS_given_|SCS_referral_|SC_education_referral_|SC_education_given_)", .x))
+
+pop_004_match_declined <- reduce(
+  edu_or_service_cols,
+  .init = pop_004_match_declined,
+  .f = ~ REF_match_function_4(.x, .y, include_temp_cols = FALSE)
+)
+
+edu_or_service_cols_005 <- names(pop_005_match_declined) %>% 
+  keep(~ grepl("^(SCS_given_|SCS_referral_|SC_education_referral_|SC_education_given_)", .x))
+
+pop_005_match_declined <- reduce(
+  edu_or_service_cols_005,
+  .init = pop_005_match_declined,
+  .f = ~ REF_match_function_4(.x, .y, include_temp_cols = FALSE)
+)
+# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_1", include_temp_cols = FALSE)
+# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_2", include_temp_cols = FALSE)
+# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_3", include_temp_cols = FALSE)
+# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_4", include_temp_cols = FALSE)
+# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_5", include_temp_cols = FALSE)
+# 
+# pop_004_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_1", include_temp_cols = FALSE)
+# pop_005_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_2", include_temp_cols = FALSE)
+# pop_005_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_3", include_temp_cols = FALSE)
+# pop_005_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_4", include_temp_cols = FALSE)
+# pop_005_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_5", include_temp_cols = FALSE)
+
+# Then, anyone who passes for a SCS_declined_n_pass was not truly given SCE
+pop_004_match_declined <- pop_004_match_declined %>% mutate(true_decline = as.integer(
+  if_any(ends_with("_dec_pass$"), ~ .x == 1L))) 
+
+pop_005_match_declined <- pop_005_match_declined %>% mutate(true_decline = as.integer(
+  if_any(ends_with("_dec_pass$"), ~ .x == 1L))) 
+
+#results
+table(pop_004_match_declined$true_decline)
+table(pop_005_match_declined$true_decline)
+
 ## 5. SCE declined
 pop_004 %>%
   summarise(
     total = sum(
-    across(c(SC_education_declined_1,
-             SC_education_declined_2,
-             SC_education_declined_3,
-             SC_education_declined_4,
-             SC_education_declined_5), 
-           ~ !is.na(.x))
+      across(c(SC_education_declined_1,
+               SC_education_declined_2,
+               SC_education_declined_3,
+               SC_education_declined_4,
+               SC_education_declined_5), 
+             ~ !is.na(.x))
     ))
 
 pop_005 %>%
@@ -321,8 +396,66 @@ pop_005 %>%
     ))
 
 
+pop_004 %>%
+  summarise()
 
 
+######
+# N(%) of those receiving or referred for smoking cessation education out of those who made the 
+# numerator only based on REFERSSSA criteria within the preceding 24 months
+
+pop_004_sce <- left_join(pop_004_match1, pop_004_match2, by = c("patid"))
+
+pop_004_sce <- pop_004_sce %>%
+  filter(true_SCE_given == 1|true_SCE_ref == 1) %>% 
+  select(patid, true_SCE_given, true_SCE_ref) 
+
+
+pop_004_sce %>%
+  summarise(n_unique_patids = n_distinct(patid))
+
+
+# N(%) of those who were referred to or received an element of smoking cessation service out 
+# of those who made the numerator only based on REFERSSSA criteria within the preceding 24 months
+
+pop_004_scs <- left_join(pop_004_match3, pop_004_match4, by = c("patid"))
+
+pop_004_scs <- pop_004_scs %>%
+  filter(true_SCS_given == 1|true_SCS_ref == 1) %>% 
+  select(patid, true_SCS_given, true_SCS_ref) 
+
+
+pop_004_scs %>%
+  summarise(n_unique_patids = n_distinct(patid))
+
+
+
+# N(%) of those receiving or referred for smoking cessation education out of those who made the 
+# numerator only based on REFERSSSA criteria within the preceding 12 months
+
+pop_005_sce <- left_join(pop_005_match1, pop_005_match2, by = c("patid"))
+
+pop_005_sce <- pop_005_sce %>%
+  filter(true_SCE_given == 1|true_SCE_ref == 1) %>% 
+  select(patid, true_SCE_given, true_SCE_ref) 
+
+
+pop_005_sce %>%
+  summarise(n_unique_patids = n_distinct(patid))
+
+
+# N(%) of those who were referred to or received an element of smoking cessation service out 
+# of those who made the numerator only based on REFERSSSA criteria within the preceding 12 months
+
+pop_005_scs <- left_join(pop_005_match3, pop_005_match4, by = c("patid"))
+
+pop_005_scs <- pop_005_scs %>%
+  filter(true_SCS_given == 1|true_SCS_ref == 1) %>% 
+  select(patid, true_SCS_given, true_SCS_ref) 
+
+
+pop_005_scs %>%
+  summarise(n_unique_patids = n_distinct(patid))
 
 
 
