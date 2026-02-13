@@ -79,29 +79,6 @@ multiextract_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/
 
 
 
-# REFERSSSA_CLASS_pipe <- function(
-    #     obsfile,
-#     rds_dir = "X:/QOF_project/Data/tidy_data/RDS/",
-#     codes,
-#     refersssaclass) {
-#   
-#   message(paste0("REFERSSSA Class extracted: ", refersssaclass)) 
-#   
-#   obs <- readRDS(paste0(rds_dir, obsfile))
-#   
-#   EXTRACT_COD <- codes %>%
-#     filter(REFERSSSACLASS == refersssaclass) %>%  
-#     dplyr::pull(snomedctconceptid) %>% unique()
-#   
-#   obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-#   obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
-#   obs <- obs[ , .(patid, obsdate)]
-#   obs <- unique(obs)
-#   
-#   return(obs)
-#   
-# }
-
 rds_dir <- "X:/QOF_project/Data/tidy_data/RDS/"
 
 obs_files <- list.files(rds_dir)[grepl("Observation",

@@ -326,17 +326,6 @@ pop_005_match_declined <- reduce(
   .init = pop_005_match_declined,
   .f = ~ REF_match_function_4(.x, .y, include_temp_cols = FALSE)
 )
-# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_1", include_temp_cols = FALSE)
-# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_2", include_temp_cols = FALSE)
-# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_3", include_temp_cols = FALSE)
-# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_4", include_temp_cols = FALSE)
-# pop_004_match_declined <- REF_match_function_SCE_declined(pop_004_match_declined, "SCS_declined_5", include_temp_cols = FALSE)
-# 
-# pop_004_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_1", include_temp_cols = FALSE)
-# pop_005_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_2", include_temp_cols = FALSE)
-# pop_005_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_3", include_temp_cols = FALSE)
-# pop_005_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_4", include_temp_cols = FALSE)
-# pop_005_match_declined <- REF_match_function_SCE_declined(pop_005_match_declined, "SCS_declined_5", include_temp_cols = FALSE)
 
 # Then, anyone who passes for a SCS_declined_n_pass was not truly given SCE
 pop_004_match_declined <- pop_004_match_declined %>% mutate(true_decline = as.integer(
