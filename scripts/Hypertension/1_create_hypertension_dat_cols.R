@@ -223,7 +223,7 @@ dat <- left_join(dat, HOMEAMBBP, by = "patid")
 
 # and lastly we create the final variable.
 
-dat <- dat %>% mutate(CLHMAMBBPLAT_DAT = pmax(CLINBPLAT_DAT, HOMEAMBBPLAT_DAT))
+dat <- dat %>% mutate(CLHMAMBBPLAT_DAT = pmax(CLINBPLAT_DAT, HOMEAMBBPLAT_DAT, na.rm = TRUE))
 
 # then we save our cohort
 
