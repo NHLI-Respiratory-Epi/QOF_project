@@ -167,8 +167,8 @@ HYP_REG_N == sum(HYP009_denom_RN1_N,
 #          register,  excluded, selected numerator, selected denominator
 
 nodes <- data.frame("name" = c("Hypertension \nregister ", "Rejected rule 1: Age", 
-                               "Selected rule 2: Well-controlled BP (clinical)",
-                               "Selected rule 3: Well-controlled BP (home)",
+                               "Selected rule 2: Well-controlled BP (home)",
+                               "Selected rule 3: Well-controlled BP (clinical)",
                                "Rejected rule 4: On maximal therapy", 
                                "Rejected rule 5: Unsuitable for QI care",
                                "Rejected rule 6: Declined BP monitoring care",
