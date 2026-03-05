@@ -137,7 +137,7 @@ dat <- dat %>% rename(    #AST_DAT = AST_COD_earliest,
 # AST1_DAT requires use of a pipe again
 
 library(readxl)
-AA_minimal <- read_xlsx("Z:/Group_work/QOF_project/Alex/QOF_project/codelists/all/Asthma_JKQ_condensed.xlsx")
+AA_minimal <- read_xlsx("Z:/Group_work/QOF_project/Alex/QOF_project/codelists/all/AST_COD_updated.xlsx")
 AA_minimal$conceptId <- as.integer64(AA_minimal$conceptId)
 
 AA_alt_codelist <- AA_minimal$conceptId
@@ -556,7 +556,7 @@ dat <- left_join(dat, ASTDIAGINVITE2_DAT, by = "patid")
 
 # new codelists
 codes_drugs <- readRDS("Z:/Group_work/QOF_project/Alex/QOF_project/codelists/all/AA_drugs_combined_QOF_JKQ_codelist.RDS")
-AA_minimal <- read_xlsx("Z:/Group_work/QOF_project/Alex/QOF_project/codelists/all/Asthma_JKQ_condensed.xlsx")
+AA_minimal <- read_xlsx("Z:/Group_work/QOF_project/Alex/QOF_project/codelists/all/AST_COD_updated.xlsx")
 
 # get directory and files
 rds_dir <- "X:/QOF_project/Data/tidy_data/RDS/"
