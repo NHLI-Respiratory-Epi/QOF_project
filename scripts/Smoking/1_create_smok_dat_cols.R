@@ -4,15 +4,16 @@ library(dplyr)
 library(data.table)
 library(bit64)
 library(parallel)
+library(lubridate)
 
 dat <- readRDS("X:/QOF_project/Data/Smoking/cohort/cohort_smoking_prelim.RDS")
 codes <- readRDS("codelists/all/ast_copd_hyp_smok.RDS")
-#functions <- source("X:/QOF_project/Gloria/QOF_project/scripts/Smoking/smokmake_gi.R")
 
 dat <- dat %>% dplyr::mutate(PAT_AGE = as.numeric(ACHV - dob)/365.25)
 
 
-dat <- dat %>% rename(AST_DAT = AST_COD_earliest,
+dat <- dat %>% rename(PAT_DOB = dob,
+                      AST_DAT = AST_COD_earliest,
                       SMOK_DAT = SMOK_COD_latest,
                       ASTLAT_DAT = AST_COD_latest,
                       # ASTRES_DAT needs to be created
@@ -59,14 +60,13 @@ dat <- dat %>%
 
 
 
-# NOTE: ex-smoker variables 41-46 not created but not needed for our current QIs of interest
 
 dat <- dat %>% mutate(PPED = ACHV,
                       ASTRES_DAT = if_else(ASTRES_COD_latest > ASTLAT_DAT, 
                                            ASTRES_COD_latest, NA),
                       COPDRES_DAT = if_else(COPDRES_COD_latest > COPDLAT_DAT, 
                                             COPDRES_COD_latest, NA),
-                      CKD1AND2_DAT = if_else(CKD1AND2_COD_latest > CKD_DAT, # needs to be made here 
+                      CKD1AND2_DAT = if_else(CKD1AND2_COD_latest > CKD_DAT,  
                                              CKD1AND2_COD_latest, NA), 
                       CKDRES_DAT = if_else(CKDRES_COD_latest > CKD_DAT, 
                                            CKDRES_COD_latest, NA),
@@ -75,9 +75,6 @@ dat <- dat %>% mutate(PPED = ACHV,
                       HYPRES_DAT = if_else(HYPRES_COD_latest > HYPLAT_DAT, 
                                            HYPRES_COD_latest, NA),
                       )
-
-
-
 
 # isolating review dates within 1 year takes a bit more time
 
@@ -149,6 +146,96 @@ SMOKINVITE2_DAT <- SMOKINVITE2_DAT %>%
 # bind it into our cohort
 
 dat <- left_join(dat, SMOKINVITE2_DAT, by = "patid")
+
+#Creating EXSMOK_DAT
+
+EXSMOK_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", codes, cluster_id) {
+  message(paste0("Cluster ID extracted: ", cluster_id))
+  
+  obs <- readRDS(paste0(rds_dir, obsfile))
+  EXTRACT_COD <- codes %>% filter(Cluster_ID == cluster_id) %>%  
+    dplyr::pull(snomedctconceptid) %>% unique()
+  
+  
+  
+  obs <- obs[snomedctconceptid %in% EXTRACT_COD]
+  obs <- obs[obsdate <= "2024-03-31"]
+  obs <- obs[ , .(patid, obsdate)]
+  obs <- unique(obs)
+  obs <- obs %>% rename(EXSMOK_DAT = obsdate)
+  
+  return(obs)
+  
+}
+
+
+clusterExport(cl, varlist = c("obs_files", "rds_dir", "EXSMOK_DAT_pipe", "codes"), 
+              envir = environment())
+
+
+EXSMOK_DAT_big <- parLapply(cl, obs_files, EXSMOK_DAT_pipe, codes = codes, cluster_id = "EXSMOK_COD") 
+
+EXSMOK_DAT <- rbindlist(EXSMOK_DAT_big)
+
+# bind EXSMOK_DAT array into our cohort
+
+dat_exsmok <- left_join(dat, EXSMOK_DAT, by = "patid")
+
+# create EXSMOK1_DAT and EXSMOK2_DAT (had to use data.table for this)
+
+DT <- as.data.table(dat_exsmok)
+
+# Precompute the row-wise windows (cheap, fully vectorised)
+DT[, `:=`(
+  EXSMOK1_lb = EXSMOK_DAT - years(2),
+  EXSMOK1_ub = EXSMOK_DAT - years(1),
+  EXSMOK2_lb = EXSMOK_DAT - years(3),
+  EXSMOK2_ub = EXSMOK_DAT - years(2)  # per your code: EXSMOK2_ub = EXSMOK1_lb
+)]
+
+# For each patid, compute the group-wise maxima of the row-wise windows ONCE
+DT[, `:=`(
+  max_EXSMOK1_lb = max(EXSMOK1_lb),
+  max_EXSMOK1_ub = max(EXSMOK1_ub),
+  max_EXSMOK2_lb = max(EXSMOK2_lb),
+  max_EXSMOK2_ub = max(EXSMOK2_ub),
+  max_EXSMOK_DAT = max(EXSMOK_DAT)
+), by = patid]
+
+# Now classify rows in one pass
+DT[, `:=`(
+  EXSMOK1_DAT_calc = fifelse(EXSMOK_DAT >= max_EXSMOK1_lb & EXSMOK_DAT < max_EXSMOK1_ub, EXSMOK_DAT, as.Date(NA)),
+  EXSMOK2_DAT_calc = fifelse(EXSMOK_DAT >= max_EXSMOK2_lb & EXSMOK_DAT < max_EXSMOK2_ub, EXSMOK_DAT, as.Date(NA))
+)]
+
+# Create EXSMOK1_DAT and EXSMOK2_DAT
+DT[
+  DT[, .(EXSMOK1_DAT = max(EXSMOK1_DAT_calc, na.rm = TRUE),
+         EXSMOK2_DAT = max(EXSMOK2_DAT_calc, na.rm = TRUE)),
+     by = patid],
+  on = "patid",
+  `:=`(
+    EXSMOK1_DAT = i.EXSMOK1_DAT,
+    EXSMOK2_DAT = i.EXSMOK2_DAT
+  )
+]
+
+# Create L3YREXSMOK_DAT and E3YREXSMOK_DAT
+DT[, `:=`(
+  L3YREXSMOK_DAT = fifelse(!is.na(EXSMOK1_DAT) & !is.na(EXSMOK2_DAT), max_EXSMOK_DAT, as.Date(NA)),
+  E3YREXSMOK_DAT = fifelse(!is.na(EXSMOK2_DAT), EXSMOK2_DAT, as.Date(NA))
+)]
+
+# Create E3YREXSMOK2_DAT
+DT[, E3YREXSMOK2_DAT := fifelse(is.na(LSMOK_DAT)| E3YREXSMOK_DAT > LSMOK_DAT, E3YREXSMOK_DAT, as.Date(NA))]
+
+DT <- as.data.frame(DT)
+DT <- DT %>%
+  select(patid, L3YREXSMOK_DAT, E3YREXSMOK_DAT, E3YREXSMOK2_DAT) %>%
+  distinct(patid, .keep_all = TRUE)
+
+#Finally bind cols into cohort
+dat <- left_join(dat, DT, by = "patid")
 
 
 # Save the cohort!!!!

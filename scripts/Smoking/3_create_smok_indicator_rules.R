@@ -40,8 +40,69 @@ dat <- dat %>% mutate(SMOK2_REG_RN1 = if_else(PAT_AGE >= 15, 1, 0)) # 1 = S, 0 =
 
 dat <- dat %>% mutate(SMOK2_REG = ifelse(SMOK2_REG_RN1 == 1, 1, 0))
 
+### INDICATOR 002 ###
+
+dat <- dat %>% 
+  mutate(SMOK002_denom_RN1 = if_else(!is.na(CHD_DAT)|
+                                       !is.na(PAD_DAT)|
+                                       !is.na(STRK_DAT)|
+                                       !is.na(TIA_DAT)|
+                                       !is.na(HYPLAT_DAT) & is.na(HYPRES_DAT)|
+                                       !is.na(DMLAT_DAT) & is.na (DMRES_DAT) & PAT_AGE >= 17|
+                                       !is.na(COPDLAT_DAT) & is.na(COPDRES_DAT)|
+                                       !is.na(ASTLAT_DAT) & is.na(ASTRES_DAT) & !is.na(ASTTRT_DAT)|
+                                       !is.na(CKD_DAT) & is.na(CKDRES_DAT) & is.na(CKD1AND2_DAT) & PAT_AGE >= 18|
+                                       !is.na(MH_DAT), 1, 0, missing = NA_real_), # 1 = N, 0 = R
+         SMOK002_denom_RN2 = if_else(CSMOK_DAT >= PPED - 365.25, 1, 0, missing = 0), # 1 = S, 0 = N
+         SMOK002_denom_RN3 = if_else(PAT_AGE > 25 & 
+                                       !is.na(NSMOK_DAT) & 
+                                       NSMOK_DAT >= DIAG_DAT & 
+                                       NSMOK_DAT > PAT_DOB + 25, 1, 0, missing = 0), # 1 = S, 0 = N
+         SMOK002_denom_RN4 = if_else(PAT_AGE <= 25 &
+                                       NSMOK_DAT > PPED - 365.25, 1, 0, missing = 0), # 1 = S, 0 = N
+         SMOK002_denom_RN5 = if_else(!is.na(LEXSMOK_DAT) &
+                                       LEXSMOK_DAT > PPED - 365.25, 1, 0, missing = NA_real_), # 1 = S, 0 = N
+         SMOK002_denom_RN6 = if_else(!is.na(E3YREXSMOK2_DAT), 1, 0, missing = 0), # 1 = S, 0 = N
+         SMOK002_denom_RN7 = if_else(SMOKPCAPU_DAT > PPED - 365.25, 1, 0, missing = 0), # 1 = R, 0 = N
+         SMOK002_denom_RN8 = if_else(SMOKSTATDEC_DAT > PPED - 365.25, 1, 0, missing = 0), # 1 = R, 0 = N
+         SMOK002_denom_RN9 = if_else(SMOKPCADEC_DAT > PPED - 365.25, 1, 0, missing = 0), # 1 = R, 0 = N
+         SMOK002_denom_RN10 = if_else(!is.na(SMOKINVITE1_DAT) &
+                                        !is.na(SMOKINVITE2_DAT), 1, 0, missing = NA_real_), # 1 = R, 0 = N
+         SMOK002_denom_RN11 = if_else(DIAG_DAT > PPED - 93, 1, 0, missing = NA_real_), # 1 = R, 0 = N
+         SMOK002_denom_RN12 = if_else(REG_DAT > PPED - 93, 1, 0, missing = NA_real_)) # 1 = R, 0 = S
 
 
+
+
+# create the final indicator denominator
+
+dat <- dat %>% mutate(SMOK002_denominator = if_else(
+  SMOK1_REG == 1 &                    # In population register AND
+    # (SMOK002_denom_RN1 == 0 &         # Have status "current smoker" AND
+       (SMOK002_denom_RN2 == 1 |      # (A) Meet RN2 selection criterion OR...
+          (SMOK002_denom_RN2 == 0 &   # ...
+             SMOK002_denom_RN3 == 0 & # ...
+             SMOK002_denom_RN4 == 0 & # ...
+             SMOK002_denom_RN5 == 0 & # ...
+             SMOK002_denom_RN6 == 0)  # ... (B) make it through RN3-6
+       ), 
+  1, 0, missing = 0))
+
+# The numerator is applied to patients selected into the denominator
+
+dat <- dat %>%
+  mutate(SMOK002_numerator = case_when(
+    SMOK002_denominator == 0 ~ NA_integer_,
+    SMOK002_denom_RN2 == 1 ~ 1L,
+    SMOK002_denom_RN3 == 1 ~ 1L,
+    SMOK002_denom_RN4 == 1 ~ 1L,
+    SMOK002_denom_RN5 == 1 ~ 1L,
+    SMOK002_denom_RN6 == 1 ~ 1L,
+    SMOK002_denom_RN6 == 0 ~ 0L,
+    TRUE ~ NA_integer_
+  ))
+
+# quality indicator prevalence........
 
 ### INDICATOR 004 ###
 
