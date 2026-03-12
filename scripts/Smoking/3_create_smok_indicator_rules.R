@@ -77,21 +77,23 @@ dat <- dat %>%
 # create the final indicator denominator
 
 dat <- dat %>% mutate(SMOK002_denominator = if_else(
-  SMOK1_REG == 1 &                    # In population register AND
-    (SMOK002_denom_RN1 == 1 &         # 
-     SMOK002_denom_RN2 == 1 &      # (A) Meet RN2 selection criterion OR...
-     SMOK002_denom_RN3 == 1 & # ...
-     SMOK002_denom_RN4 == 1 & # ...
-     SMOK002_denom_RN5 == 1 & # ...
-     SMOK002_denom_RN6 == 1 & # ... (B) make it through RN3-6
-          SMOK002_denom_RN7 == 0 & # ...
-          SMOK002_denom_RN8 == 0 & # ...
-          SMOK002_denom_RN9 == 0 & # ...
-          SMOK002_denom_RN10 == 0 & # ...
-          SMOK002_denom_RN11 == 0 & # ...
-          SMOK002_denom_RN12 == 0 # ...
+  SMOK1_REG == 1 &                    
+    (SMOK002_denom_RN1 != 0 &         
+    (SMOK002_denom_RN2 == 1) | (SMOK002_denom_RN2 == 0) &      
+    (SMOK002_denom_RN3 == 1) | (SMOK002_denom_RN2 == 0) & 
+    (SMOK002_denom_RN4 == 1) | (SMOK002_denom_RN2 == 0) & 
+    (SMOK002_denom_RN5 == 1) | (SMOK002_denom_RN2 == 0) & 
+    (SMOK002_denom_RN6 == 1) | (SMOK002_denom_RN2 == 0) & 
+     SMOK002_denom_RN7 == 0 & 
+     SMOK002_denom_RN8 == 0 & 
+     SMOK002_denom_RN9 == 0 & 
+     SMOK002_denom_RN10 == 0 & 
+     SMOK002_denom_RN11 == 0 & 
+     SMOK002_denom_RN12 == 0 
        ), 
   1, 0, missing = 0))
+
+
 
 # The numerator is applied to patients selected into the denominator
 
@@ -121,17 +123,21 @@ sum(dat$SMOK002_numerator, na.rm = TRUE)/sum(dat$SMOK002_denominator)
 smok1_reg_dat <- dat %>%
   filter(SMOK1_REG == 1)
 
-smok1_reg_cs_dat <- smok1_reg_dat %>%
-  filter(SMOK002_denom_RN1 == 0)
-
-denom_rule_summary <- smok1_reg_cs_dat %>%
+denom_rule_summary <- smok1_reg_dat %>%
   group_by(SMOK002_denom_RN2,
            SMOK002_denom_RN3,
            SMOK002_denom_RN4,
            SMOK002_denom_RN5,
-           SMOK002_denom_RN6
+           SMOK002_denom_RN6,
+           SMOK002_denom_RN7,
+           SMOK002_denom_RN8,
+           SMOK002_denom_RN9,
+           SMOK002_denom_RN10,
+           SMOK002_denom_RN11,
+           SMOK002_denom_RN12
   ) %>%
   summarise(freq = n())
+
 
 ### INDICATOR 004 ###
 
