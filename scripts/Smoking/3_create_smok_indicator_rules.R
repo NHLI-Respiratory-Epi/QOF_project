@@ -78,13 +78,18 @@ dat <- dat %>%
 
 dat <- dat %>% mutate(SMOK002_denominator = if_else(
   SMOK1_REG == 1 &                    # In population register AND
-    # (SMOK002_denom_RN1 == 0 &         # Have status "current smoker" AND
-       (SMOK002_denom_RN2 == 1 |      # (A) Meet RN2 selection criterion OR...
-          (SMOK002_denom_RN2 == 0 &   # ...
-             SMOK002_denom_RN3 == 0 & # ...
-             SMOK002_denom_RN4 == 0 & # ...
-             SMOK002_denom_RN5 == 0 & # ...
-             SMOK002_denom_RN6 == 0)  # ... (B) make it through RN3-6
+    (SMOK002_denom_RN1 == 1 &         # 
+     SMOK002_denom_RN2 == 1 &      # (A) Meet RN2 selection criterion OR...
+     SMOK002_denom_RN3 == 1 & # ...
+     SMOK002_denom_RN4 == 1 & # ...
+     SMOK002_denom_RN5 == 1 & # ...
+     SMOK002_denom_RN6 == 1 & # ... (B) make it through RN3-6
+          SMOK002_denom_RN7 == 0 & # ...
+          SMOK002_denom_RN8 == 0 & # ...
+          SMOK002_denom_RN9 == 0 & # ...
+          SMOK002_denom_RN10 == 0 & # ...
+          SMOK002_denom_RN11 == 0 & # ...
+          SMOK002_denom_RN12 == 0 # ...
        ), 
   1, 0, missing = 0))
 
@@ -98,11 +103,35 @@ dat <- dat %>%
     SMOK002_denom_RN4 == 1 ~ 1L,
     SMOK002_denom_RN5 == 1 ~ 1L,
     SMOK002_denom_RN6 == 1 ~ 1L,
-    SMOK002_denom_RN6 == 0 ~ 0L,
     TRUE ~ NA_integer_
   ))
 
 # quality indicator prevalence........
+
+dat %>%
+  filter(SMOK1_REG == 1) %>%
+  group_by(SMOK002_denominator,
+           SMOK002_numerator) %>%
+  summarise(freq = n())
+
+sum(dat$SMOK002_numerator, na.rm = TRUE)/sum(dat$SMOK002_denominator) 
+
+
+# Explore where the numbers go
+smok1_reg_dat <- dat %>%
+  filter(SMOK1_REG == 1)
+
+smok1_reg_cs_dat <- smok1_reg_dat %>%
+  filter(SMOK002_denom_RN1 == 0)
+
+denom_rule_summary <- smok1_reg_cs_dat %>%
+  group_by(SMOK002_denom_RN2,
+           SMOK002_denom_RN3,
+           SMOK002_denom_RN4,
+           SMOK002_denom_RN5,
+           SMOK002_denom_RN6
+  ) %>%
+  summarise(freq = n())
 
 ### INDICATOR 004 ###
 
