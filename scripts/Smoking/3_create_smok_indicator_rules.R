@@ -99,13 +99,13 @@ dat <- dat %>% mutate(SMOK002_denominator = if_else(
 
 dat <- dat %>%
   mutate(SMOK002_numerator = case_when(
-    SMOK002_denominator == 0 ~ NA_integer_,
+    SMOK002_denominator == 0 ~ 0L,
     SMOK002_denom_RN2 == 1 ~ 1L,
     SMOK002_denom_RN3 == 1 ~ 1L,
     SMOK002_denom_RN4 == 1 ~ 1L,
     SMOK002_denom_RN5 == 1 ~ 1L,
     SMOK002_denom_RN6 == 1 ~ 1L,
-    TRUE ~ NA_integer_
+    TRUE ~ 0L
   ))
 
 # quality indicator prevalence........
