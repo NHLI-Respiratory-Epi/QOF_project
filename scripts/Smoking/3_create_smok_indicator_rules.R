@@ -57,7 +57,7 @@ dat <- dat %>%
          SMOK002_denom_RN3 = if_else(PAT_AGE > 25 & 
                                        !is.na(NSMOK_DAT) & 
                                        NSMOK_DAT >= DIAG_DAT & 
-                                       NSMOK_DAT > PAT_DOB + 25, 1, 0, missing = 0), # 1 = S, 0 = N
+                                       NSMOK_DAT > PAT_DOB + 365.25*25, 1, 0, missing = 0), # 1 = S, 0 = N
          SMOK002_denom_RN4 = if_else(PAT_AGE <= 25 &
                                        NSMOK_DAT > PPED - 365.25, 1, 0, missing = 0), # 1 = S, 0 = N
          SMOK002_denom_RN5 = if_else(!is.na(LEXSMOK_DAT) &

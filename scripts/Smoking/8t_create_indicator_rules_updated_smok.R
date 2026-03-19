@@ -4,7 +4,7 @@ library(data.table)
 library(bit64)
 
 
-dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/6_cohort_smoking_with_updated_DAT_cols.RDS")
+dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/6t_cohort_smoking_with_updated_DAT_cols.RDS")
 
 
 # create the rules
@@ -53,23 +53,23 @@ dat <- dat %>%
                                        !is.na(ASTLAT_DAT) & is.na(ASTRES_DAT) & !is.na(ASTTRT_DAT)|
                                        !is.na(CKD_DAT) & is.na(CKDRES_DAT) & is.na(CKD1AND2_DAT) & PAT_AGE >= 18|
                                        !is.na(MH_DAT), 1, 0, missing = NA_real_), # 1 = N, 0 = R
-         SMOK002_denom_RN2 = if_else(CSMOK_DAT >= PPED - 365.25, 1, 0, missing = 0), # 1 = S, 0 = N
-         SMOK002_denom_RN3 = if_else(PAT_AGE > 25 & 
+         SMOK002_denom_RN2 = if_else(CSMOK_DAT >= (PPED - 365.25), 1, 0, missing = 0), # 1 = S, 0 = N
+         SMOK002_denom_RN3 = if_else((PAT_AGE > 25) & 
                                        !is.na(NSMOK_DAT) & 
                                        NSMOK_DAT >= DIAG_DAT & 
-                                       NSMOK_DAT > PAT_DOB + 25, 1, 0, missing = 0), # 1 = S, 0 = N
+                                       NSMOK_DAT > (PAT_DOB + 365.25*25), 1, 0, missing = 0), # 1 = S, 0 = N
          SMOK002_denom_RN4 = if_else(PAT_AGE <= 25 &
-                                       NSMOK_DAT > PPED - 365.25, 1, 0, missing = 0), # 1 = S, 0 = N
+                                       NSMOK_DAT > (PPED - 365.25), 1, 0, missing = 0), # 1 = S, 0 = N
          SMOK002_denom_RN5 = if_else(!is.na(LEXSMOK_DAT) &
-                                       LEXSMOK_DAT > PPED - 365.25, 1, 0, missing = NA_real_), # 1 = S, 0 = N
+                                       LEXSMOK_DAT > (PPED - 365.25), 1, 0, missing = NA_real_), # 1 = S, 0 = N
          SMOK002_denom_RN6 = if_else(!is.na(E3YREXSMOK2_DAT), 1, 0, missing = 0), # 1 = S, 0 = N
-         SMOK002_denom_RN7 = if_else(SMOKPCAPU_DAT > PPED - 365.25, 1, 0, missing = 0), # 1 = R, 0 = N
-         SMOK002_denom_RN8 = if_else(SMOKSTATDEC_DAT > PPED - 365.25, 1, 0, missing = 0), # 1 = R, 0 = N
-         SMOK002_denom_RN9 = if_else(SMOKPCADEC_DAT > PPED - 365.25, 1, 0, missing = 0), # 1 = R, 0 = N
+         SMOK002_denom_RN7 = if_else(SMOKPCAPU_DAT > (PPED - 365.25), 1, 0, missing = 0), # 1 = R, 0 = N
+         SMOK002_denom_RN8 = if_else(SMOKSTATDEC_DAT > (PPED - 365.25), 1, 0, missing = 0), # 1 = R, 0 = N
+         SMOK002_denom_RN9 = if_else(SMOKPCADEC_DAT > (PPED - 365.25), 1, 0, missing = 0), # 1 = R, 0 = N
          SMOK002_denom_RN10 = if_else(!is.na(SMOKINVITE1_DAT) &
                                         !is.na(SMOKINVITE2_DAT), 1, 0, missing = NA_real_), # 1 = R, 0 = N
-         SMOK002_denom_RN11 = if_else(DIAG_DAT > PPED - 93, 1, 0, missing = NA_real_), # 1 = R, 0 = N
-         SMOK002_denom_RN12 = if_else(REG_DAT > PPED - 93, 1, 0, missing = NA_real_)) # 1 = R, 0 = S
+         SMOK002_denom_RN11 = if_else(DIAG_DAT > (PPED - 93), 1, 0, missing = NA_real_), # 1 = R, 0 = N
+         SMOK002_denom_RN12 = if_else(REG_DAT > (PPED - 93), 1, 0, missing = NA_real_)) # 1 = R, 0 = S
 
 
 
@@ -254,6 +254,6 @@ sum(dat$SMOK005_numerator, na.rm = TRUE)/sum(dat$SMOK005_denominator)
 
 # Save the cohort!!!!
 
-dat <- saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/7_updated_cohort_smoking_with_rules.RDS")
+dat <- saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/7t_updated_cohort_smoking_with_rules.RDS")
 
 

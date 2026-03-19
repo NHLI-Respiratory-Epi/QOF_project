@@ -7,6 +7,7 @@ library(parallel)
 library(lubridate)
 
 dat <- readRDS("X:/QOF_project/Data/Smoking/cohort/cohort_smoking_prelim.RDS")
+codes <- readRDS("codelists/all/ast_copd_hyp_smok.RDS")
 updated_codes <- readRDS("X:/QOF_project/Creating_codelists/Smoking/Codelists/finalised_new_and_old_comparison.RDS")
 
 updated_codes <- updated_codes %>% select(-Cluster_ID) %>% 
@@ -18,16 +19,13 @@ dat <- dat %>% dplyr::mutate(PAT_AGE = as.numeric(ACHV - dob)/365.25)
 
 dat <- dat %>% rename(PAT_DOB = dob,
                       AST_DAT = AST_COD_earliest,
-                      # SMOK_DAT = SMOK_COD_latest,
                       ASTLAT_DAT = AST_COD_latest,
-                      # ASTRES_DAT needs to be created
-                      # ASTTRT_DAT = ASTTRT_COD_latest_1yr, ASTTRT_COD is incorrect
                       ASTINVITE1_DAT = ASTINVITE_COD_earliest_1yr,
                       ASTMONDEC_DAT = ASTMONDEC_COD_latest,
                       ASTPCADEC_DAT = ASTPCADEC_COD_latest,
-                      # SMOKSTATDEC_DAT = SMOKSTATDEC_COD_latest,
-                      # SMOKEXPOS_DAT = SMOKEXPOS_COD_latest,
-                      # NOSMOKEXPOS_DAT = NOSMOKEXPOS_COD_latest,
+                      SMOKSTATDEC_DAT = SMOKSTATDEC_COD_latest,
+                      SMOKEXPOS_DAT = SMOKEXPOS_COD_latest,
+                      NOSMOKEXPOS_DAT = NOSMOKEXPOS_COD_latest,
                       MH_DAT = MH_COD_earliest,
                       CKD_DAT = CKD_COD_latest,
                       COPDLAT_DAT = COPD_COD_latest,
@@ -41,14 +39,10 @@ dat <- dat %>% rename(PAT_DOB = dob,
                       PAD_DAT = PAD_COD_earliest,
                       CHD_DAT = CHD_COD_earliest,
                       REG_DAT = regstartdate, 
-                      # SMOKINVITE1_DAT = SMOKINVITE_COD_earliest_1yr,
-                      # SMOKPCADEC_DAT = SMOKPCADEC_COD_latest,
-                      # SMOKPCAPU_DAT = SMOKPCAPU_COD_latest,
-                      PHARMDRUG_DAT = PHARMDRUG_COD_latest,
-                      # PHARM_DAT = PHARM_COD_latest,
-                      # REFERSSSA_DAT = REFERSSSA_COD_latest,
-                      # LSMOK_DAT = LSMOK_COD_latest
-                      ) 
+                      SMOKINVITE1_DAT = SMOKINVITE_COD_earliest_1yr,
+                      SMOKPCADEC_DAT = SMOKPCADEC_COD_latest,
+                      SMOKPCAPU_DAT = SMOKPCAPU_COD_latest,
+                      PHARMDRUG_DAT = PHARMDRUG_COD_latest) 
 
 
 
@@ -93,29 +87,29 @@ clusterEvalQ(cl, { # these need to be read into each cluster
 #Creating SMOK_DAT
 
 SMOK_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", updated_codes, cluster_id) {
-  message(paste0("Cluster ID extracted: ", cluster_id)) 
-  
+  message(paste0("Cluster ID extracted: ", cluster_id))
+
   obs <- readRDS(paste0(rds_dir, obsfile))
-  EXTRACT_COD <- updated_codes %>% filter(Cluster_ID == cluster_id) %>%  
+  EXTRACT_COD <- updated_codes %>% filter(Cluster_ID == cluster_id) %>%
     dplyr::pull(snomedctconceptid) %>% unique()
-  
-  
-  
+
+
+
   obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
+  obs <- obs[obsdate <= "2024-03-31"]
   obs <- obs[ , .(patid, obsdate)]
   obs <- unique(obs)
-  
+
   return(obs)
-  
+
 }
 
 
-clusterExport(cl, varlist = c("obs_files", "rds_dir", "SMOK_DAT_pipe", "updated_codes"), 
+clusterExport(cl, varlist = c("obs_files", "rds_dir", "SMOK_DAT_pipe", "updated_codes"),
               envir = environment())
 
 
-SMOK_DAT_big <- parLapply(cl, obs_files, SMOK_DAT_pipe, updated_codes = updated_codes, cluster_id = "SMOK_COD") 
+SMOK_DAT_big <- parLapply(cl, obs_files, SMOK_DAT_pipe, updated_codes = updated_codes, cluster_id = "SMOK_COD")
 
 SMOK_DAT <- rbindlist(SMOK_DAT_big)
 SMOK_DAT <- unique(SMOK_DAT)
@@ -125,18 +119,66 @@ SMOK_DAT <- unique(SMOK_DAT)
 SMOK_DAT <- left_join(SMOK_DAT, dplyr::select(dat, patid, ACHV, QSSD), by = "patid")
 
 SMOK_DAT <- SMOK_DAT %>%
-  filter(!is.na(obsdate)) %>% 
-  filter(obsdate <= ACHV) %>% 
-  arrange(patid, obsdate) %>% 
-  group_by(patid) %>% 
+  filter(!is.na(obsdate)) %>%
+  filter(obsdate <= ACHV) %>%
+  arrange(patid, obsdate) %>%
+  group_by(patid) %>%
   slice_max(obsdate, n=1) %>%
-  ungroup() %>% 
+  ungroup() %>%
   rename(SMOK_DAT = obsdate) %>%
   dplyr::select(patid, SMOK_DAT)
 
 # bind it into our cohort
 
 dat <- left_join(dat, SMOK_DAT, by = "patid")
+
+#Creating NSMOK_DAT
+NSMOK_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", updated_codes, cluster_id) {
+  message(paste0("Cluster ID extracted: ", cluster_id))
+
+  obs <- readRDS(paste0(rds_dir, obsfile))
+  EXTRACT_COD <- updated_codes %>% filter(Cluster_ID == cluster_id) %>%
+    dplyr::pull(snomedctconceptid) %>% unique()
+
+
+
+  obs <- obs[snomedctconceptid %in% EXTRACT_COD]
+  obs <- obs[obsdate <= "2024-03-31"]
+  obs <- obs[ , .(patid, obsdate)]
+  obs <- unique(obs)
+
+  return(obs)
+
+}
+
+
+clusterExport(cl, varlist = c("obs_files", "rds_dir", "NSMOK_DAT_pipe", "updated_codes"),
+              envir = environment())
+
+
+NSMOK_DAT_big <- parLapply(cl, obs_files, NSMOK_DAT_pipe, updated_codes = updated_codes, cluster_id = "NSMOK_COD")
+
+NSMOK_DAT <- rbindlist(NSMOK_DAT_big)
+NSMOK_DAT <- unique(NSMOK_DAT)
+
+# join with subsection of our cohort
+
+NSMOK_DAT <- left_join(NSMOK_DAT, dplyr::select(dat, patid, ACHV, QSSD), by = "patid")
+
+NSMOK_DAT <- NSMOK_DAT %>%
+  filter(!is.na(obsdate)) %>%
+  filter(obsdate <= ACHV) %>%
+  arrange(patid, obsdate) %>%
+  group_by(patid) %>%
+  slice_max(obsdate, n=1) %>%
+  ungroup() %>%
+  rename(NSMOK_DAT_latest = obsdate) %>%
+  dplyr::select(patid, NSMOK_DAT_latest)
+
+# bind it into our cohort
+
+dat <- left_join(dat, NSMOK_DAT, by = "patid")
+
 
 #Creating LSMOK_DAT
 LSMOK_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", updated_codes, cluster_id) {
@@ -149,7 +191,7 @@ LSMOK_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS
   
   
   obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
+  obs <- obs[obsdate <= "2024-03-31"]
   obs <- obs[ , .(patid, obsdate)]
   obs <- unique(obs)
   
@@ -196,7 +238,7 @@ PHARM_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS
   
   
   obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
+  obs <- obs[obsdate <= "2024-03-31"]
   obs <- obs[ , .(patid, obsdate)]
   obs <- unique(obs)
   
@@ -233,68 +275,16 @@ PHARM_DAT <- PHARM_DAT %>%
 dat <- left_join(dat, PHARM_DAT, by = "patid")
 
 
-
-
-#Creating SMOKINVITE1_DAT
-SMOKINVITE1_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", updated_codes, cluster_id) {
-  message(paste0("Cluster ID extracted: ", cluster_id)) # now an argument in the function to 
-  # prevent accidentally extracting the wrong thing
-  # although tbh this backfired because when it used to be called 'Cluster_ID' it 
-  # messed up the pipe completely - had to change to cluster_id
-  
-  obs <- readRDS(paste0(rds_dir, obsfile))
-  EXTRACT_COD <- updated_codes %>% filter(Cluster_ID == cluster_id) %>%  
-    dplyr::pull(snomedctconceptid) %>% unique()
-  
-  
-  
-  obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
-  obs <- obs[ , .(patid, obsdate)]
-  obs <- unique(obs)
-  
-  return(obs)
-  
-}
-
-
-clusterExport(cl, varlist = c("obs_files", "rds_dir", "SMOKINVITE1_DAT_pipe", "updated_codes"), 
-              envir = environment())
-
-
-SMOKINVITE1_DAT_big <- parLapply(cl, obs_files, SMOKINVITE1_DAT_pipe, updated_codes = updated_codes, cluster_id = "SMOKINVITE_COD") 
-
-SMOKINVITE1_DAT <- rbindlist(SMOKINVITE1_DAT_big)
-SMOKINVITE1_DAT <- unique(SMOKINVITE1_DAT)
-
-# join with subsection of our cohort
-
-SMOKINVITE1_DAT <- left_join(SMOKINVITE1_DAT, dplyr::select(dat, patid, ACHV, QSSD), by = "patid")
-
-SMOKINVITE1_DAT <- SMOKINVITE1_DAT %>% 
-  filter(!is.na(obsdate)) %>% 
-  filter(obsdate >= QSSD) %>% 
-  arrange(patid, obsdate) %>% 
-  group_by(patid) %>% 
-  slice(1) %>%
-  ungroup() %>% 
-  rename(SMOKINVITE1_DAT = obsdate) %>% 
-  dplyr::select(patid, SMOKINVITE1_DAT)
-
-# bind it into our cohort
-
-dat <- left_join(dat, SMOKINVITE1_DAT, by = "patid")
-
 #Creating SMOKINVITE2_DAT
 
-SMOKINVITE2_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", updated_codes, cluster_id) {
+SMOKINVITE2_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", codes, cluster_id) {
   message(paste0("Cluster ID extracted: ", cluster_id)) # now an argument in the function to 
   # prevent accidentally extracting the wrong thing
   # although tbh this backfired because when it used to be called 'Cluster_ID' it 
   # messed up the pipe completely - had to change to cluster_id
   
   obs <- readRDS(paste0(rds_dir, obsfile))
-  EXTRACT_COD <- updated_codes %>% filter(Cluster_ID == cluster_id) %>%  
+  EXTRACT_COD <- codes %>% filter(Cluster_ID == cluster_id) %>%  
     dplyr::pull(snomedctconceptid) %>% unique()
   
   
@@ -309,11 +299,11 @@ SMOKINVITE2_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_da
 }
 
 
-clusterExport(cl, varlist = c("obs_files", "rds_dir", "SMOKINVITE2_DAT_pipe", "updated_codes"), 
+clusterExport(cl, varlist = c("obs_files", "rds_dir", "SMOKINVITE2_DAT_pipe", "codes"), 
               envir = environment())
 
 
-SMOKINVITE2_DAT_big <- parLapply(cl, obs_files, SMOKINVITE2_DAT_pipe, updated_codes = updated_codes, cluster_id = "SMOKINVITE_COD") 
+SMOKINVITE2_DAT_big <- parLapply(cl, obs_files, SMOKINVITE2_DAT_pipe, codes = codes, cluster_id = "SMOKINVITE_COD") 
 
 SMOKINVITE2_DAT <- rbindlist(SMOKINVITE2_DAT_big)
 SMOKINVITE2_DAT <- unique(SMOKINVITE2_DAT)
@@ -336,148 +326,6 @@ SMOKINVITE2_DAT <- SMOKINVITE2_DAT %>%
 
 dat <- left_join(dat, SMOKINVITE2_DAT, by = "patid")
 
-#Creating SMOKPCADEC_DAT
-SMOKPCADEC_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", updated_codes, cluster_id) {
-  message(paste0("Cluster ID extracted: ", cluster_id)) 
-  
-  obs <- readRDS(paste0(rds_dir, obsfile))
-  EXTRACT_COD <- updated_codes %>% filter(Cluster_ID == cluster_id) %>%  
-    dplyr::pull(snomedctconceptid) %>% unique()
-  
-  
-  
-  obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
-  obs <- obs[ , .(patid, obsdate)]
-  obs <- unique(obs)
-  
-  return(obs)
-  
-}
-
-
-clusterExport(cl, varlist = c("obs_files", "rds_dir", "SMOKPCADEC_DAT_pipe", "updated_codes"), 
-              envir = environment())
-
-
-SMOKPCADEC_DAT_big <- parLapply(cl, obs_files, SMOKPCADEC_DAT_pipe, updated_codes = updated_codes, cluster_id = "SMOKPCADEC_COD") 
-
-SMOKPCADEC_DAT <- rbindlist(SMOKPCADEC_DAT_big)
-SMOKPCADEC_DAT <- unique(SMOKPCADEC_DAT)
-
-# join with subsection of our cohort
-
-SMOKPCADEC_DAT <- left_join(SMOKPCADEC_DAT, dplyr::select(dat, patid, ACHV, QSSD), by = "patid")
-
-SMOKPCADEC_DAT <- SMOKPCADEC_DAT %>%
-  filter(!is.na(obsdate)) %>% 
-  filter(obsdate <= ACHV) %>% 
-  arrange(patid, obsdate) %>% 
-  group_by(patid) %>% 
-  slice_max(obsdate, n=1) %>%
-  ungroup() %>% 
-  rename(SMOKPCADEC_DAT = obsdate) %>%
-  dplyr::select(patid, SMOKPCADEC_DAT)
-
-# bind it into our cohort
-
-dat <- left_join(dat, SMOKPCADEC_DAT, by = "patid")
-
-
-#Creating SMOKPCAPU_DAT
-SMOKPCAPU_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", updated_codes, cluster_id) {
-  message(paste0("Cluster ID extracted: ", cluster_id)) 
-  
-  obs <- readRDS(paste0(rds_dir, obsfile))
-  EXTRACT_COD <- updated_codes %>% filter(Cluster_ID == cluster_id) %>%  
-    dplyr::pull(snomedctconceptid) %>% unique()
-  
-  
-  
-  obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
-  obs <- obs[ , .(patid, obsdate)]
-  obs <- unique(obs)
-  
-  return(obs)
-  
-}
-
-
-clusterExport(cl, varlist = c("obs_files", "rds_dir", "SMOKPCAPU_DAT_pipe", "updated_codes"), 
-              envir = environment())
-
-
-SMOKPCAPU_DAT_big <- parLapply(cl, obs_files, SMOKPCAPU_DAT_pipe, updated_codes = updated_codes, cluster_id = "SMOKPCAPU_COD") 
-
-SMOKPCAPU_DAT <- rbindlist(SMOKPCAPU_DAT_big)
-SMOKPCAPU_DAT <- unique(SMOKPCAPU_DAT)
-
-# join with subsection of our cohort
-
-SMOKPCAPU_DAT <- left_join(SMOKPCAPU_DAT, dplyr::select(dat, patid, ACHV, QSSD), by = "patid")
-
-SMOKPCAPU_DAT <- SMOKPCAPU_DAT %>%
-  filter(!is.na(obsdate)) %>% 
-  filter(obsdate <= ACHV) %>% 
-  arrange(patid, obsdate) %>% 
-  group_by(patid) %>% 
-  slice_max(obsdate, n=1) %>%
-  ungroup() %>% 
-  rename(SMOKPCAPU_DAT = obsdate) %>%
-  dplyr::select(patid, SMOKPCAPU_DAT)
-
-# bind it into our cohort
-
-dat <- left_join(dat, SMOKPCAPU_DAT, by = "patid")
-
-
-#Creating SMOKSTATDEC_DAT
-SMOKSTATDEC_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", updated_codes, cluster_id) {
-  message(paste0("Cluster ID extracted: ", cluster_id)) 
-  
-  obs <- readRDS(paste0(rds_dir, obsfile))
-  EXTRACT_COD <- updated_codes %>% filter(Cluster_ID == cluster_id) %>%  
-    dplyr::pull(snomedctconceptid) %>% unique()
-  
-  
-  
-  obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
-  obs <- obs[ , .(patid, obsdate)]
-  obs <- unique(obs)
-  
-  return(obs)
-  
-}
-
-
-clusterExport(cl, varlist = c("obs_files", "rds_dir", "SMOKSTATDEC_DAT_pipe", "updated_codes"), 
-              envir = environment())
-
-
-SMOKSTATDEC_DAT_big <- parLapply(cl, obs_files, SMOKSTATDEC_DAT_pipe, updated_codes = updated_codes, cluster_id = "SMOKSTATDEC_COD") 
-
-SMOKSTATDEC_DAT <- rbindlist(SMOKSTATDEC_DAT_big)
-SMOKSTATDEC_DAT <- unique(SMOKSTATDEC_DAT)
-
-# join with subsection of our cohort
-
-SMOKSTATDEC_DAT <- left_join(SMOKSTATDEC_DAT, dplyr::select(dat, patid, ACHV, QSSD), by = "patid")
-
-SMOKSTATDEC_DAT <- SMOKSTATDEC_DAT %>%
-  filter(!is.na(obsdate)) %>% 
-  filter(obsdate <= ACHV) %>% 
-  arrange(patid, obsdate) %>% 
-  group_by(patid) %>% 
-  slice_max(obsdate, n=1) %>%
-  ungroup() %>% 
-  rename(SMOKSTATDEC_DAT = obsdate) %>%
-  dplyr::select(patid, SMOKSTATDEC_DAT)
-
-# bind it into our cohort
-
-dat <- left_join(dat, SMOKSTATDEC_DAT, by = "patid")
 
 #Creating REFERSSSA_DAT
 REFERSSSA_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS/", updated_codes, cluster_id) {
@@ -490,7 +338,7 @@ REFERSSSA_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data
   
   
   obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
+  obs <- obs[obsdate <= "2024-03-31"]
   obs <- obs[ , .(patid, obsdate)]
   obs <- unique(obs)
   
@@ -560,19 +408,19 @@ EXSMOK_DAT <- rbindlist(EXSMOK_DAT_big)
 
 dat_exsmok <- left_join(dat, EXSMOK_DAT, by = "patid")
 
-# create EXSMOK1_DAT and EXSMOK2_DAT (had to use data.table for this)
+# create EXSMOK1_DAT and EXSMOK2_DAT (had to use data.table for this bit as it look forever otherwise)
 
 DT <- as.data.table(dat_exsmok)
 
-# Precompute the row-wise windows (cheap, fully vectorised)
+# Precompute the row-wise windows lb=lower boundary, ub=upper boundary
 DT[, `:=`(
   EXSMOK1_lb = EXSMOK_DAT - years(2),
   EXSMOK1_ub = EXSMOK_DAT - years(1),
   EXSMOK2_lb = EXSMOK_DAT - years(3),
-  EXSMOK2_ub = EXSMOK_DAT - years(2)  # per your code: EXSMOK2_ub = EXSMOK1_lb
+  EXSMOK2_ub = EXSMOK_DAT - years(2)  # being redundant but EXSMOK2_ub = EXSMOK1_lb
 )]
 
-# For each patid, compute the group-wise maxima of the row-wise windows ONCE
+# For each patid, compute the group-wise max upper and lower boundaries of the row-wise windows ONCE
 DT[, `:=`(
   max_EXSMOK1_lb = max(EXSMOK1_lb),
   max_EXSMOK1_ub = max(EXSMOK1_ub),
@@ -608,31 +456,29 @@ DT[, `:=`(
 # Create E3YREXSMOK2_DAT
 DT[, E3YREXSMOK2_DAT := fifelse(is.na(LSMOK_DAT)| E3YREXSMOK_DAT > LSMOK_DAT, E3YREXSMOK_DAT, as.Date(NA))]
 
+# Create LEXSMOK_DAT
+DT[, LEXSMOK_DAT := fifelse(max_EXSMOK_DAT == SMOK_DAT, max_EXSMOK_DAT, as.Date(NA))]
+
+# Change back into dataframe so that I can use tidyverse syntax
 DT <- as.data.frame(DT)
 DT <- DT %>%
-  select(patid, L3YREXSMOK_DAT, E3YREXSMOK_DAT, E3YREXSMOK2_DAT) %>%
+  select(patid, L3YREXSMOK_DAT, E3YREXSMOK_DAT, E3YREXSMOK2_DAT, LEXSMOK_DAT) %>%
   distinct(patid, .keep_all = TRUE)
 
 #Finally bind cols into cohort
 dat <- left_join(dat, DT, by = "patid")
 
 
-# NSMOK_DAT, CSMOK_DAT, and LEXSMOK_DAT need to be created by matching with SMOK_DAT
-# given that we've got the latest of all of them, we can just do it in a similar way
-# to the creation of the 'resolved' codes
-
-
+# NSMOK_DAT and CSMOK_DAT need to be created by matching with SMOK_DAT
 dat <- dat %>% 
-  mutate(NSMOK_DAT = if_else(NSMOK_COD_latest == SMOK_DAT, 
-                             NSMOK_COD_latest, NA),
-         CSMOK_DAT = if_else(LSMOK_DAT == SMOK_DAT, # (LSMOK_DAT was renamed from LSMOK_COD_latest) 
-                             LSMOK_DAT, NA),
-         LEXSMOK_DAT = if_else(EXSMOK_COD_latest == SMOK_DAT, 
-                               EXSMOK_COD_latest, NA))
+  mutate(NSMOK_DAT = if_else(NSMOK_DAT_latest == SMOK_DAT,
+                             NSMOK_DAT_latest, NA),
+         CSMOK_DAT = if_else(LSMOK_DAT == SMOK_DAT,
+                             LSMOK_DAT, NA))
 
 
 # Save the cohort!!!!
 
-saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/5_cohort_smoking_with_updated_DAT_cols.RDS")
+saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/5t_cohort_smoking_with_updated_DAT_cols.RDS")
 
 stopCluster(cl)

@@ -3,7 +3,7 @@ library(dplyr)
 library(bit64)
 library(parallel)
 
-dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/5_cohort_smoking_with_updated_DAT_cols.RDS")
+dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/5t_cohort_smoking_with_updated_DAT_cols.RDS")
 
 dat %>% select(starts_with(c("ASTTRT"
                              , "PHARMDRUG"
@@ -148,5 +148,5 @@ dat <- dat %>% mutate(DIAG_DAT = pmin(CHD_DAT,
                                      na.rm = TRUE))
 
 
-saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/6_cohort_smoking_with_updated_DAT_cols.RDS")
+saveRDS(dat, "Z:/Group_work/QOF_project/Data/Smoking/cohort/6t_cohort_smoking_with_updated_DAT_cols.RDS")
 

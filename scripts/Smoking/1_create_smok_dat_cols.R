@@ -138,7 +138,7 @@ SMOKINVITE2_DAT <- SMOKINVITE2_DAT %>%
   filter(obsdate >= SMOKINVITE1_DAT + 7) %>% 
   arrange(patid, obsdate) %>% 
   group_by(patid) %>% 
-  slice(1) %>%
+  dplyr::slice(1) %>%
   ungroup() %>% 
   rename(SMOKINVITE2_DAT = obsdate) %>% 
   dplyr::select(patid, SMOKINVITE2_DAT)
@@ -187,10 +187,10 @@ DT <- as.data.table(dat_exsmok)
 
 # Precompute the row-wise windows (cheap, fully vectorised)
 DT[, `:=`(
-  EXSMOK1_lb = EXSMOK_DAT - years(2),
-  EXSMOK1_ub = EXSMOK_DAT - years(1),
-  EXSMOK2_lb = EXSMOK_DAT - years(3),
-  EXSMOK2_ub = EXSMOK_DAT - years(2)  # per your code: EXSMOK2_ub = EXSMOK1_lb
+  EXSMOK1_lb = EXSMOK_DAT - lubridate::years(2),
+  EXSMOK1_ub = EXSMOK_DAT - lubridate::years(1),
+  EXSMOK2_lb = EXSMOK_DAT - lubridate::years(3),
+  EXSMOK2_ub = EXSMOK_DAT - lubridate::years(2)  # per your code: EXSMOK2_ub = EXSMOK1_lb
 )]
 
 # For each patid, compute the group-wise maxima of the row-wise windows ONCE
@@ -231,8 +231,8 @@ DT[, E3YREXSMOK2_DAT := fifelse(is.na(LSMOK_DAT)| E3YREXSMOK_DAT > LSMOK_DAT, E3
 
 DT <- as.data.frame(DT)
 DT <- DT %>%
-  select(patid, L3YREXSMOK_DAT, E3YREXSMOK_DAT, E3YREXSMOK2_DAT) %>%
-  distinct(patid, .keep_all = TRUE)
+  dplyr::select(patid, L3YREXSMOK_DAT, E3YREXSMOK_DAT, E3YREXSMOK2_DAT) %>%
+  dplyr::distinct(patid, .keep_all = TRUE)
 
 #Finally bind cols into cohort
 dat <- left_join(dat, DT, by = "patid")
