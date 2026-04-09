@@ -64,6 +64,22 @@ summary(dat$BMI_cat)
 table(dat$BMI_cat)
 summary(dat$BMI)
 
+
+
+dat$outcome_asthma_attacks_bin <- NA
+dat$outcome_asthma_attacks_bin[dat$outcome_asthma_attacks_rate == 0] <- "0 asthma attacks during follow-up"
+dat$outcome_asthma_attacks_bin[dat$outcome_asthma_attacks_rate > 0] <- "1+ asthma attacks during follow-up"
+dat$outcome_asthma_attacks_bin <- factor(dat$outcome_asthma_attacks_bin)
+summary(dat$outcome_asthma_attacks_bin)
+
+dat$outcome_aecopd_bin <- NA
+dat$outcome_aecopd_bin[dat$outcome_aecopd_rate == 0] <- "0 AECOPD during follow-up"
+dat$outcome_aecopd_bin[dat$outcome_aecopd_rate > 0] <- "1+ AECOPD during follow-up"
+dat$outcome_aecopd_bin <- factor(dat$outcome_aecopd_bin)
+summary(dat$outcome_aecopd_bin)
+
+
+
 # we can label our pat characteristics variables at this point too:
 
 dat <- dat %>% 
@@ -82,7 +98,14 @@ dat <- dat %>%
          eth5 = ff_label(eth5, "Ethnicity (5 categories)"),
          eth19 = ff_label(eth19, "Ethnicity (19 categories)"),
          age = ff_label(age, "Age"),
-         BMI_cat = ff_label(BMI_cat, "BMI category"))
+         BMI_cat = ff_label(BMI_cat, "BMI category"),
+         baseline_asthma_attacks = ff_label(baseline_asthma_attacks, "Number of asthma attacks in reporting period"),
+         baseline_aecopd = ff_label(baseline_aecopd, "Number of AECOPD in reporting period"),
+         outcome_asthma_attacks_bin = ff_label(outcome_asthma_attacks_bin, "One or more asthma attacks during follow-up"),
+         outcome_aecopd_bin = ff_label(outcome_aecopd_bin, "One or more AECOPD during follow-up"),
+         outcome_asthma_attacks = ff_label(outcome_asthma_attacks, "Number of asthma attacks during follow-up"),
+         outcome_aecopd = ff_label(outcome_aecopd, "Number of AECOPD during follow-up"),
+         followup_time_pys = ff_label(followup_time_pys, "Follow-up time in person-years"))
 
 # summary_factorlist(dat, dependent = "gender", explanatory = "gord")
 # add in the comparisons - asthma first
