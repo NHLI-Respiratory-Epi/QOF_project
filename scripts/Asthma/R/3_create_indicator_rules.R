@@ -77,15 +77,21 @@ dat <- REV_match_function(dat, "REV_DAT_9")
 dat <- dat %>% mutate(AST007_denom_RN1 = as.integer(
     if_any(matches("^REV_DAT_.*_pass$"), ~ .x == 1))) # 1 = S, 0 = N
 
+# # RN1: Select patients from the specified population who meet all of the criteria below:
+#   • Patient has an asthma review on the same day as a written personalised asthma plan.
+# • Patient has a recording of the number of exacerbations within the one month leading up to and including date of the asthma review. 
+# • The review above was in the 12 month period up to and including the payment period end date.
+# Pass all remaining patients to the next rule.
+
 # then onto the more simple rules:
 
 dat <- dat %>% 
-  mutate(AST007_denom_RN2 = if_else(ASTPCAPU_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N
-         AST007_denom_RN3 = if_else(ASTMONDEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N
-         AST007_denom_RN4 = if_else(ASTPCADEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N
-         AST007_denom_RN5 = if_else(!is.na(ASTINVITE1_DAT) & !is.na(ASTINVITE2_DAT), 1, 0, missing = 0), # 1 = R, 0 = N
-         AST007_denom_RN6 = if_else(AST_DAT >= ACHV - 93, 1, 0, missing = 0), # 1 = R, 0 = N
-         AST007_denom_RN7 = if_else(regstartdate >= ACHV - 93, 1, 0, missing = 0)) # 1 = R, 0 = S
+  mutate(AST007_denom_RN2 = if_else(ASTPCAPU_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N # unsuitable
+         AST007_denom_RN3 = if_else(ASTMONDEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N # declined 1
+         AST007_denom_RN4 = if_else(ASTPCADEC_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N # declined 2
+         AST007_denom_RN5 = if_else(!is.na(ASTINVITE1_DAT) & !is.na(ASTINVITE2_DAT), 1, 0, missing = 0), # 1 = R, 0 = N # invited
+         AST007_denom_RN6 = if_else(AST_DAT >= ACHV - 93, 1, 0, missing = 0), # 1 = R, 0 = N # new diagnosis
+         AST007_denom_RN7 = if_else(regstartdate >= ACHV - 93, 1, 0, missing = 0)) # 1 = R, 0 = S # newly registered
 
 # create the final indicator denominator
 
@@ -117,6 +123,7 @@ dat <- dat %>% mutate(AST007_nume = ifelse(
 # and the big reveal for quality indicator prevalence........
 
 sum(dat$AST007_nume)/sum(dat$AST007_denom) # Not bad!!!
+
 
 
 # now AST008: # smoking habit / secondhand smoking
@@ -171,6 +178,7 @@ dat <- dat %>%
 
 sum(dat$AST008_nume)/sum(dat$AST008_denom) 
 
+
 # AST012*  (*but diagnosis reflects 1st April 2023, not 2025 as stated)
 
 
@@ -219,5 +227,83 @@ dat <- dat %>% mutate(AST012_nume = if_else(AST_REG == 1 & AST012_denom == 1 &
 sum(dat$AST012_nume)/sum(dat$AST012_denom)
 
 # dat %>% filter(AST_REG == 1) %>% select(AST_REG, AST007_nume, AST007_denom, AST008_nume, AST008_denom, AST012_nume, AST012_denom) %>% summary()
+
+# separate out the rules according to the alternate order so that we can see why
+# patients are removed at each step and compare their characteristics
+
+# as long as we don't change the nume and denom columns we can still save this in the same 
+# cohort file and not mess anything up downstream 
+
+# AST007
+dat <- dat %>% mutate(AST007_inc_exc_type = case_when(
+  AST007_denom_RN1 == 1 & AST_REG == 1 ~ "Included in numerator",
+  AST_REG == 0 | AST007_denom_RN6 == 1 | AST007_denom_RN7 == 1 ~ NA_character_, # not included in either because not registered or newly registered or new diagnosis
+  AST007_denom_RN2 == 1 ~ "Rejected as unsuitable",
+  AST007_denom_RN3 == 1 | AST007_denom_RN4 == 1 ~ "Rejected as declined care",
+  AST007_denom_RN5 == 1 ~ "Rejected as invited",
+  TRUE ~ "Included in denominator"
+))
+
+#
+table(dat$AST007_inc_exc_type) # check that these roughly match Sankey diagram
+# (won't be exact as order is changed)
+
+# make factor
+dat$AST007_inc_exc_type <- factor(dat$AST007_inc_exc_type, 
+                                  levels = c("Included in numerator",
+                                             "Included in denominator",
+                                             "Rejected as unsuitable",
+                                             "Rejected as declined care",
+                                             "Rejected as invited"))
+
+
+
+# AST008
+dat <- dat %>% mutate(AST008_inc_exc_type = case_when(
+  AST008_denom_RN1 == 1 ~ NA_character_, # too old
+  AST_REG == 1 & (AST008_denom_RN2 == 1 | AST008_denom_RN3 == 1 | AST008_denom_RN4 == 1) ~ "Included in numerator",
+  AST_REG == 0 | AST008_denom_RN10 == 1 | AST008_denom_RN11 == 1 ~ NA_character_, # not included in either because not registered or newly registered or new diagnosis
+  AST008_denom_RN5 == 1 ~ "Rejected as unsuitable",
+  AST008_denom_RN6 == 1 | AST008_denom_RN7 == 1 | AST008_denom_RN8 == 1 ~ "Rejected as declined care",
+  AST008_denom_RN9 == 1 ~ "Rejected as invited",
+  TRUE ~ "Included in denominator"
+))
+
+table(dat$AST008_inc_exc_type) # check that these roughly match Sankey diagram
+
+# make factor
+dat$AST008_inc_exc_type <- factor(dat$AST008_inc_exc_type, 
+                                  levels = c("Included in numerator",
+                                             "Included in denominator",
+                                             "Rejected as unsuitable",
+                                             "Rejected as declined care",
+                                             "Rejected as invited"))
+
+# AST012
+dat <- dat %>% mutate(AST012_inc_exc_type = case_when(
+  AST012_denom_RN1 == 0 ~ NA_character_, # not newly diagnosed
+  AST_REG == 1 & (AST012_denom_RN2 == 1 | AST012_denom_RN3 == 1) ~ "Included in numerator",
+  AST_REG == 0 | AST012_denom_RN8 == 1 | AST012_denom_RN9 == 1 ~ NA_character_, # not included in either because not registered or newly registered or new diagnosis
+  AST012_denom_RN4 == 1 ~ "Rejected as unsuitable",
+  AST012_denom_RN5 == 1 | AST012_denom_RN6 == 1 ~ "Rejected as declined care",
+  AST012_denom_RN7 == 1 ~ "Rejected as invited",
+  TRUE ~ "Included in denominator"
+))
+
+
+
+table(dat$AST012_inc_exc_type) # check that these roughly match Sankey diagram
+
+# make factor
+dat$AST012_inc_exc_type <- factor(dat$AST012_inc_exc_type, 
+                                  levels = c("Included in numerator",
+                                             "Included in denominator",
+                                             "Rejected as unsuitable",
+                                             "Rejected as declined care",
+                                             "Rejected as invited"))
+
+
+
+
 
 saveRDS(dat, "Z:/Group_work/QOF_project/Data/Asthma/cohort/3_cohort_asthma_with_AST_indicators.RDS")
