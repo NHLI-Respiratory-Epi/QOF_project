@@ -120,7 +120,13 @@ dat <- dat %>%
          AST012_denom_QA_QT = ff_label(AST012_denom_QA_QT, 
                                       "AST012 (newly diagnosed with objective test) denominator"),
          AST012_nume_QA_QT = ff_label(AST012_nume_QA_QT, 
-                                     "AST012 (newly diagnosed with objective test) numerator"))
+                                     "AST012 (newly diagnosed with objective test) numerator"),
+         AST007_inc_exc_type_QA_QT = ff_label(AST007_inc_exc_type_QA_QT, 
+                                       "AST007 (asthma review) selected/rejected categories"),
+         AST008_inc_exc_type_QA_QT = ff_label(AST008_inc_exc_type_QA_QT, 
+                                        "AST007 (exposure to smoking) selected/rejected categories"),
+         AST012_inc_exc_type_QA_QT = ff_label(AST012_inc_exc_type_QA_QT, 
+                                        "AST007 (newly diagnosed with objective test) selected/rejected categories"))
          
 # COPD QIs
 
