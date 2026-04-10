@@ -93,9 +93,9 @@ bp <- codes %>% filter(Cluster_ID == "CLINBP_COD" | Cluster_ID == "HOMEAMBBP_COD
     bp_when = case_when(
       grepl("night", SNOMED_code_description, ignore.case = TRUE) ~ "Nightime",
       grepl("24", SNOMED_code_description, ignore.case = TRUE) ~ "24hr",
-      grepl("home", SNOMED_code_description, ignore.case = TRUE) ~ "Home",
-      grepl("self", SNOMED_code_description, ignore.case = TRUE) ~ "Home",
-      TRUE ~ "Daytime"
+      #grepl("home", SNOMED_code_description, ignore.case = TRUE) ~ "Home",
+      #grepl("self", SNOMED_code_description, ignore.case = TRUE) ~ "Home",
+      TRUE ~ "Day_Home"
     ),
     bp_when=ifelse(Cluster_ID=="HOMEAMBBP_COD", bp_when, NA)
   )
@@ -145,7 +145,7 @@ HOMEAMBBP_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS
   #  obs <- readRDS(paste0(rds_dir, obs_files[1]))   
   bp <- bp %>% filter(Cluster_ID == "HOMEAMBBP_COD") %>%
     filter(bp_type %in% c("systolic", "diastolic")) %>% 
-    dplyr::select(snomedctconceptid, bp_type, bp_when) %>% unique()
+    dplyr::select(snomedctconceptid, bp_type, bp_when) %>% unique() 
   
   bp<-setDT(bp)
   
@@ -164,6 +164,8 @@ HOMEAMBBP_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS
   } else {
       obs.list<-obs %>% group_split(bp_when) # loop over ABPM type
       empty<-list()
+      empty[[1]] <- obs %>%
+        distinct(patid)
       for(a in 1:length(obs.list)) {
         df<-obs.list[[a]]  %>%
           pivot_wider(names_from = bp_type, values_from = value) %>%
@@ -183,12 +185,11 @@ HOMEAMBBP_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS
           select(-bp_when)
         colnames(df)[2:4] <- paste0(colnames(df)[2:4], "_", when)
         
-        empty[[a]]<-df
+        empty[[a+1]]<-df
         rm(df, when)
         
       }
-      obs<-purrr::reduce(empty, left_join, by="patid")
-      
+      obs<-purrr::reduce(empty, dplyr::left_join, by="patid")
       ensure_cols<- function(df, col_names, default_type="numeric"){
         for(col in col_names){
           if (!col %in% names(df)){
@@ -203,10 +204,10 @@ HOMEAMBBP_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/RDS
         return(df)
       }
       
-      check<-c("HOMEAMBBPLAT_DAT_24hr","HOMEAMBBPDIALAT_VAL_24hr",
-               "HOMEAMBBPSYSLAT_VAL_24hr","HOMEAMBBPLAT_DAT_Daytime","HOMEAMBBPDIALAT_VAL_Daytime",
-               "HOMEAMBBPSYSLAT_VAL_Daytime","HOMEAMBBPLAT_DAT_Home","HOMEAMBBPDIALAT_VAL_Home",
-               "HOMEAMBBPSYSLAT_VAL_Home","HOMEAMBBPLAT_DAT_Nightime","HOMEAMBBPDIALAT_VAL_Nightime",
+      check<-c("HOMEAMBBPLAT_DAT_24hr","HOMEAMBBPDIALAT_VAL_24hr","HOMEAMBBPSYSLAT_VAL_24hr",
+               "HOMEAMBBPLAT_DAT_Day_Home","HOMEAMBBPDIALAT_VAL_Day_Home","HOMEAMBBPSYSLAT_VAL_Day_Home",
+               #"HOMEAMBBPLAT_DAT_Home","HOMEAMBBPDIALAT_VAL_Home","HOMEAMBBPSYSLAT_VAL_Home",
+               "HOMEAMBBPLAT_DAT_Nightime","HOMEAMBBPDIALAT_VAL_Nightime",
                "HOMEAMBBPSYSLAT_VAL_Nightime")
       obs<-ensure_cols(obs, check, default_type = "numeric")
       
@@ -288,12 +289,14 @@ dat1 <- left_join(dat, HOMEAMBBP, by = "patid")
 # and lastly we create the final variable.
 
 dat1 <- dat1 %>% 
-  mutate(CLHMAMBBPLAT_DAT = pmax(CLINBPLAT_DAT, HOMEAMBBPLAT_DAT_24hr, HOMEAMBBPLAT_DAT_Daytime,
-                                 HOMEAMBBPLAT_DAT_Home, HOMEAMBBPLAT_DAT_Nightime, 
+  mutate(CLHMAMBBPLAT_DAT = pmax(CLINBPLAT_DAT, HOMEAMBBPLAT_DAT_24hr, 
+                                 HOMEAMBBPLAT_DAT_Day_Home,
+                                 # HOMEAMBBPLAT_DAT_Home, 
+                                 HOMEAMBBPLAT_DAT_Nightime, 
                                  na.rm = TRUE))
 
 # then we save our cohort
 
-saveRDS(dat, "Z:/Group_work/QOF_project/Data/Hypertension/cohort/5_cohort_hypertension_with_DAT_cols.RDS")
+saveRDS(dat1, "Z:/Group_work/QOF_project/Data/Hypertension/cohort/5_cohort_hypertension_with_DAT_cols.RDS")
 
 stopCluster(cl)

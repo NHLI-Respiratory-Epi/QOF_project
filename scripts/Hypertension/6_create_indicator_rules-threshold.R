@@ -4,10 +4,50 @@ library(data.table)
 library(bit64)
 
 
-dat <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/3_cohort_hypertension_with_DAT_cols.RDS")
+dat1 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/5_cohort_hypertension_with_DAT_cols.RDS")
 
 
-# create the rules
+#### Ambulatory BP hierarchy ####
+dd<-dat1 %>% 
+  select(patid,  contains("HOMEAMB"))
+
+dd$amb_type <-"Day/Home"
+dd$amb_type[is.na(dd$HOMEAMBBPLAT_DAT_Day_Home) & !is.na(dd$HOMEAMBBPLAT_DAT_24hr)] <-"24hr"
+dd$amb_type[is.na(dd$HOMEAMBBPLAT_DAT_Day_Home) & is.na(dd$HOMEAMBBPLAT_DAT_24hr)] <-"Night"
+dd$amb_type[is.na(dd$HOMEAMBBPLAT_DAT_Day_Home) & is.na(dd$HOMEAMBBPLAT_DAT_24hr) & is.na(dd$HOMEAMBBPLAT_DAT_Nightime)] <-"None"
+
+# check
+nrow(dd%>%
+  filter(!is.na(HOMEAMBBPLAT_DAT_Nightime), amb_type!="Night",
+         is.na(HOMEAMBBPLAT_DAT_Day_Home), is.na(HOMEAMBBPLAT_DAT_24hr)))==0
+
+table(dd$amb_type, exclude=F)
+
+dd$HOMEAMBBPSYSLAT_VAL[dd$amb_type=="Day/Home"] <-dd$HOMEAMBBPSYSLAT_VAL_Day_Home[dd$amb_type=="Day/Home"]
+dd$HOMEAMBBPDIALAT_VAL[dd$amb_type=="Day/Home"] <-dd$HOMEAMBBPDIALAT_VAL_Day_Home[dd$amb_type=="Day/Home"]
+dd$HOMEAMBBPSYSLAT_VAL[dd$amb_type=="24hr"] <-dd$HOMEAMBBPSYSLAT_VAL_24hr[dd$amb_type=="24hr"]
+dd$HOMEAMBBPDIALAT_VAL[dd$amb_type=="24hr"] <-dd$HOMEAMBBPDIALAT_VAL_24hr[dd$amb_type=="24hr"]
+
+# fix date
+dd$HOMEAMBBPLAT_DAT_24hr<-as.character(dd$HOMEAMBBPLAT_DAT_24hr)
+dd$HOMEAMBBPLAT_DAT_Day_Home<-as.character(dd$HOMEAMBBPLAT_DAT_Day_Home)
+dd$HOMEAMBBPLAT_DAT[dd$amb_type=="Day/Home"] <-dd$HOMEAMBBPLAT_DAT_Day_Home[dd$amb_type=="Day/Home"]
+dd$HOMEAMBBPLAT_DAT[dd$amb_type=="24hr"] <-dd$HOMEAMBBPLAT_DAT_24hr[dd$amb_type=="24hr"]
+
+# rejoin
+dd<-dd %>%
+  select(patid, HOMEAMBBPLAT_DAT, HOMEAMBBPSYSLAT_VAL, HOMEAMBBPDIALAT_VAL, amb_type) 
+dd$HOMEAMBBPLAT_DAT<-as.Date(dd$HOMEAMBBPLAT_DAT, format=c("%Y-%m-%d"))
+dat<-dat1 %>%
+  select(-ends_with("Day_Home"), -ends_with("_24hr"), -ends_with("_Nightime")) %>%
+  left_join(dd, by="patid") %>% 
+  mutate(CLHMAMBBPLAT_DAT = pmax(CLINBPLAT_DAT, HOMEAMBBPLAT_DAT,na.rm = TRUE))
+
+
+rm(dat1, dd)
+
+
+#### create the rules ####
 
 # R = reject
 # S = select
@@ -26,14 +66,19 @@ table(dat$HYP_REG)
 
 dat <- dat %>% 
   mutate(HYP008_denom_RN1 = if_else(PAT_AGE >= 80, 1, 0), # 1 = R, 0 = N
-         HYP008_denom_RN2 = if_else(HOMEAMBBPSYSLAT_VAL <= 135 &
-                                      HOMEAMBBPDIALAT_VAL <= 85 &
+         HYP008_denom_RN2 = if_else(((amb_type=="Day/Home" &
+                                       HOMEAMBBPSYSLAT_VAL <= 135 & 
+                                       HOMEAMBBPDIALAT_VAL <= 85) |
+                                      (amb_type=="24hr" &
+                                         HOMEAMBBPSYSLAT_VAL <= 130 & 
+                                         HOMEAMBBPDIALAT_VAL <= 80)) &
                                       HOMEAMBBPLAT_DAT >= QSSD &
                                       CLHMAMBBPLAT_DAT == HOMEAMBBPLAT_DAT, 1, 0, missing = 0), # 1 = S, 0 = N
          HYP008_denom_RN3 = if_else(CLINBPSYSLAT_VAL <= 140 &
                                       CLINBPDIALAT_VAL <= 90 &
                                       CLINBPLAT_DAT >= QSSD &
-                                      CLHMAMBBPLAT_DAT == CLINBPLAT_DAT, 1, 0, missing = 0), # 1 = S, 0 = N
+                                      CLHMAMBBPLAT_DAT == CLINBPLAT_DAT, # added to deal with when both on same date
+                                    1, 0, missing = 0), # 1 = S, 0 = N
          HYP008_denom_RN4 = if_else(HTMAX_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N
          HYP008_denom_RN5 = if_else(HYPPCAPU_DAT >= QSSD, 1, 0, missing = 0), # 1 = R, 0 = N
          HYP008_denom_RN6 = if_else(BPDEC_DAT >= QSSD | HOMEBPDEC_DAT >= QSSD | 
@@ -44,8 +89,10 @@ dat <- dat %>%
                                           CLHMAMBBPLAT_DAT == CLINBPLAT_DAT &
                                           HYPINVITE1_DAT > CLINBPLAT_DAT & 
                                           !is.na(HYPINVITE2_DAT), 1, 0, missing = 0), # 1/0 = meets/doesn't meet SS1 criteria
-         HYP008_denom_RN8_SS2 = if_else(HOMEAMBBPLAT_DAT >= QSSD &   # subsection 2 for rule 8
-                                          (HOMEAMBBPSYSLAT_VAL > 135 | HOMEAMBBPDIALAT_VAL > 85) &
+         HYP008_denom_RN8_SS2 = if_else(# subsection 2 for rule 8
+                                          HOMEAMBBPLAT_DAT >= QSSD &   
+                                          ((amb_type=="Day/Home" & (HOMEAMBBPSYSLAT_VAL > 135 | HOMEAMBBPDIALAT_VAL > 85)) |
+                                          (amb_type=="24hr" & (HOMEAMBBPSYSLAT_VAL > 130 | HOMEAMBBPDIALAT_VAL > 80))) &
                                           CLHMAMBBPLAT_DAT == HOMEAMBBPLAT_DAT &
                                           HYPINVITE1_DAT > HOMEAMBBPLAT_DAT & 
                                           !is.na(HYPINVITE2_DAT), 1, 0, missing = 0), # 1/0 = meets/doesn't meet SS2 criteria
@@ -62,8 +109,8 @@ dat <- dat %>%
 
 dat <- dat %>% mutate(HYP008_denom = if_else(HYP_REG == 1 & # registered
                                                HYP008_denom_RN1 == 0 & ( # appropriate age
-                                               HYP008_denom_RN2 == 1 | # suitably controlled bp clinical measurement
-                                               HYP008_denom_RN3 == 1 | # suitably controlled bp home measurement
+                                               HYP008_denom_RN2 == 1 | # suitably controlled bp amb/home measurement
+                                               HYP008_denom_RN3 == 1 | # suitably controlled bp clinical measurement
                                                  (HYP008_denom_RN4 == 0 & # not kicked out for any other reason
                                                     HYP008_denom_RN5 == 0 & 
                                                     HYP008_denom_RN6 == 0 &
@@ -97,8 +144,10 @@ sum(dat$HYP008_nume)/sum(dat$HYP008_denom)
 
 dat <- dat %>% 
   mutate(HYP009_denom_RN1 = if_else(PAT_AGE <80, 1, 0), # 1 = R, 0 = N
-         HYP009_denom_RN2 = if_else(HOMEAMBBPSYSLAT_VAL <= 145 &
-                                      HOMEAMBBPDIALAT_VAL <= 85 &
+         HYP009_denom_RN2 = if_else(((amb_type=="Day/home" & HOMEAMBBPSYSLAT_VAL <= 145 &
+                                      HOMEAMBBPDIALAT_VAL <= 85)
+                                     |(amb_type=="24hr" & HOMEAMBBPSYSLAT_VAL <= 140 &
+                                         HOMEAMBBPDIALAT_VAL <= 80)) &
                                       HOMEAMBBPLAT_DAT >= QSSD &
                                       CLHMAMBBPLAT_DAT == HOMEAMBBPLAT_DAT, 1, 0, missing = 0), # 1 = S, 0 = N
          HYP009_denom_RN3 = if_else(CLINBPSYSLAT_VAL <= 150 &
@@ -116,7 +165,8 @@ dat <- dat %>%
                                           HYPINVITE1_DAT > CLINBPLAT_DAT & 
                                           !is.na(HYPINVITE2_DAT), 1, 0, missing = 0), # 1/0 = meets/doesn't meet SS1 criteria
          HYP009_denom_RN8_SS2 = if_else(HOMEAMBBPLAT_DAT >= QSSD &   # subsection 2 for rule 8
-                                          (HOMEAMBBPSYSLAT_VAL > 145 | HOMEAMBBPDIALAT_VAL > 85) &
+                                          ((amb_type=="Day/home" & (HOMEAMBBPSYSLAT_VAL > 145 | HOMEAMBBPDIALAT_VAL > 85)) 
+                                        |(amb_type=="24hr" & (HOMEAMBBPSYSLAT_VAL > 140 | HOMEAMBBPDIALAT_VAL > 80)))&
                                           CLHMAMBBPLAT_DAT == HOMEAMBBPLAT_DAT &
                                           HYPINVITE1_DAT > HOMEAMBBPLAT_DAT & 
                                           !is.na(HYPINVITE2_DAT), 1, 0, missing = 0), # 1/0 = meets/doesn't meet SS2 criteria
@@ -159,6 +209,6 @@ sum(dat$HYP009_nume)/sum(dat$HYP009_denom)
 
 # all seems good to me!
 
-saveRDS(dat, "Z:/Group_work/QOF_project/Data/Hypertension/cohort/4_cohort_hypertension_with_HYP_indicators.RDS")
+saveRDS(dat, "Z:/Group_work/QOF_project/Data/Hypertension/cohort/6_cohort_hypertension_with_HYP_indicators.RDS")
 
 
