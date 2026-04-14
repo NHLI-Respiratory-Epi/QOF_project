@@ -95,6 +95,7 @@ dat <- dat %>%
          htn_qof = ff_label(htn_qof, "Hypertension"),
          gender = ff_label(gender, "Gender"),
          region = ff_label(region, "Region"),
+         imd_2019_5 = ff_label(imd_2019_5, "Index of Multiple Deprivation (2019) quintiles"),
          eth5 = ff_label(eth5, "Ethnicity (5 categories)"),
          eth19 = ff_label(eth19, "Ethnicity (19 categories)"),
          age = ff_label(age, "Age"),
@@ -147,9 +148,9 @@ dat <- dat %>%
          AST007_inc_exc_type_QA_QT = ff_label(AST007_inc_exc_type_QA_QT, 
                                        "AST007 (asthma review) selected/rejected categories"),
          AST008_inc_exc_type_QA_QT = ff_label(AST008_inc_exc_type_QA_QT, 
-                                        "AST007 (exposure to smoking) selected/rejected categories"),
+                                        "AST008 (exposure to smoking) selected/rejected categories"),
          AST012_inc_exc_type_QA_QT = ff_label(AST012_inc_exc_type_QA_QT, 
-                                        "AST007 (newly diagnosed with objective test) selected/rejected categories"))
+                                        "AST012 (newly diagnosed with objective test) selected/rejected categories"))
          
 # COPD QIs
 
