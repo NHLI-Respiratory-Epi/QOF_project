@@ -25,27 +25,18 @@ scenario_code <- "QA_IT"
 # covars of interest
 
 
-dat$outcome_asthma_attacks_bin <- NA
-dat$outcome_asthma_attacks_bin[dat$outcome_asthma_attacks_rate == 0] <- "0 asthma attacks during follow-up"
-dat$outcome_asthma_attacks_bin[dat$outcome_asthma_attacks_rate > 0] <- "1+ asthma attacks during follow-up"
-dat$outcome_asthma_attacks_bin <- factor(dat$outcome_asthma_attacks_bin)
-summary(dat$outcome_asthma_attacks_bin)
 
-dat$outcome_aecopd_bin <- NA
-dat$outcome_aecopd_bin[dat$outcome_aecopd_rate == 0] <- "0 AECOPD during follow-up"
-dat$outcome_aecopd_bin[dat$outcome_aecopd_rate > 0] <- "1+ AECOPD during follow-up"
-dat$outcome_aecopd_bin <- factor(dat$outcome_aecopd_bin)
-summary(dat$outcome_aecopd_bin)
-
-
-ind_vars_characteristics <- dat %>% select(gender, region, age, eth5, BMI_cat,
-                                           gord:htn_qof, 
-                                           baseline_aecopd, baseline_asthma_attacks) %>% 
+ind_vars_characteristics <- dat %>% select(gender, region, imd_2019_5, age, eth5, BMI_cat,
+                                           gord:htn_qof, baseline_asthma_attacks) %>% 
   colnames()
 
 ind_vars_asthma_outcomes <- dat %>% select(outcome_asthma_attacks_bin, 
+                                           followup_time_pys,
                                            ends_with("QA_QT")) %>% 
-  select(-starts_with("AST_REG")) %>% colnames()
+  select(-starts_with("AST_REG")) %>% 
+  select(-contains("inc_exc_type")) %>% colnames()
+
+
 
 # patient characteristics table
 AST_REG_QA_QT_vs_QA_IT_table <- dat %>%
@@ -82,10 +73,12 @@ doc <- read_docx() %>% #  body_end_section_landscape() %>%
 
 print(doc, target = "Z:/Group_work/QOF_project/Alex/Output/Asthma/AST_REG_QA_QT_vs_QA_IT_table_patient_characteristics.docx")  
 
+
 # outcomes table
 # patient characteristics table
 AST_REG_QA_QT_vs_QA_IT_table_outcomes <- dat %>%
   filter(AST_REG_QA_QT_vs_QA_IT_comparison != 0) %>% 
+  filter(in_follow_up_flag == 1) %>%
   mutate(AST_REG_QA_QT_vs_QA_IT_comparison = as.character(AST_REG_QA_QT_vs_QA_IT_comparison)) %>%
   mutate(AST_REG_QA_QT_vs_QA_IT_comparison = recode(AST_REG_QA_QT_vs_QA_IT_comparison,
                                                     `1` = "In current QOF only",
@@ -94,6 +87,50 @@ AST_REG_QA_QT_vs_QA_IT_table_outcomes <- dat %>%
   summary_factorlist(., dependent = "AST_REG_QA_QT_vs_QA_IT_comparison", 
                      explanatory = ind_vars_asthma_outcomes,
                      p = TRUE,total_col = TRUE, add_col_totals = TRUE)
+
+# manually create the rate variables for the outcomes table, as finalfit doesn't do this for us
+
+rate_results <- dat %>% group_by(AST_REG_QA_QT_vs_QA_IT_comparison) %>%
+  filter(AST_REG_QA_QT_vs_QA_IT_comparison != 0) %>%
+  filter(in_follow_up_flag == 1) %>%
+  summarise(
+    total_person_years = sum(followup_time_pys, na.rm = TRUE),
+    total_attacks = sum(outcome_asthma_attacks, na.rm = TRUE)
+  ) %>%
+  mutate(rate_per_1000_pys = (total_attacks / total_person_years) * 1000) %>% # create CIs too
+  # explain the formula for the confidence intervals - we are using a Poisson distribution to model the number of attacks,
+  # so the variance is equal to the mean (total_attacks). The standard error of the rate is then sqrt(total_attacks / total_person_years^2) * 1000, 
+  # and we multiply by 1.96 for the 95% confidence interval.
+  mutate(CI_lower = (total_attacks / total_person_years) * 1000 - 1.96 * sqrt((total_attacks / total_person_years^2) * 1000^2),
+         CI_upper = (total_attacks / total_person_years) * 1000 + 1.96 * sqrt((total_attacks / total_person_years^2) * 1000^2)) %>% # then 
+  mutate(rate_CI = sprintf("%.1f (%.1f - %.1f)", round(rate_per_1000_pys, 1), round(CI_lower, 1), round(CI_upper, 1)))
+# statistically test difference in rates
+
+p_value_temp <- poisson.test(c(rate_results$total_attacks[1], rate_results$total_attacks[3]), 
+                             c(rate_results$total_person_years[1], rate_results$total_person_years[3]))$p.value
+p_value <- if_else(p_value_temp < 0.001, "<0.001", sprintf("%.3f", round(p_value_temp, 3)))
+
+# do the same but for the 'total' column
+rate_results_total <- dat %>% filter(AST_REG_QA_QT_vs_QA_IT_comparison != 0) %>% 
+  filter(in_follow_up_flag == 1) %>%
+  summarise(
+    total_person_years = sum(followup_time_pys, na.rm = TRUE),
+    total_attacks = sum(outcome_asthma_attacks, na.rm = TRUE)
+  ) %>%
+  mutate(rate_per_1000_pys = (total_attacks / total_person_years) * 1000) %>%
+  mutate(CI_lower = (total_attacks / total_person_years) * 1000 - 1.96 * sqrt((total_attacks / total_person_years^2) * 1000^2),
+         CI_upper = (total_attacks / total_person_years) * 1000 + 1.96 * sqrt((total_attacks / total_person_years^2) * 1000^2)) %>%
+  mutate(rate_CI = sprintf("%.1f (%.1f-%.1f)", round(rate_per_1000_pys, 1), round(CI_lower, 1), round(CI_upper, 1)))
+
+# manually replace the follow-up time row in the table with the rates we've recalculated, and add the p-value for the difference in rates
+
+AST_REG_QA_QT_vs_QA_IT_table_outcomes[4, 1] <- "Asthma attacks per 1000 person-years (95% CI)"
+AST_REG_QA_QT_vs_QA_IT_table_outcomes[4, 2] <- "Overall rate (95% CI)"
+AST_REG_QA_QT_vs_QA_IT_table_outcomes[4, 3] <- rate_results$rate_CI[3]
+AST_REG_QA_QT_vs_QA_IT_table_outcomes[4, 4] <- rate_results$rate_CI[1]
+AST_REG_QA_QT_vs_QA_IT_table_outcomes[4, 5] <- rate_results$rate_CI[2]
+AST_REG_QA_QT_vs_QA_IT_table_outcomes[4, 6] <- rate_results_total$rate_CI[1]
+AST_REG_QA_QT_vs_QA_IT_table_outcomes[4, 7] <- p_value
 
 ft_outcomes <- flextable(AST_REG_QA_QT_vs_QA_IT_table_outcomes)
 ft_outcomes <- fontsize(ft_outcomes, size = 9, part = "all")

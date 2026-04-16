@@ -23,7 +23,7 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/cohort/50_temp_cohort_asthma_QI_c
 
 
 
-ind_vars_characteristics <- dat %>% select(gender, region, age, eth5, BMI_cat,
+ind_vars_characteristics <- dat %>% select(gender, region, imd_2019_5, age, eth5, BMI_cat,
                                            gord:htn_qof, baseline_asthma_attacks) %>% 
   colnames()
 
@@ -71,9 +71,9 @@ doc <- read_docx() %>% #  body_end_section_landscape() %>%
 print(doc, target = "Z:/Group_work/QOF_project/Alex/Output/Asthma/AST_REG_QA_QT_vs_AA_QT_table_patient_characteristics.docx")  
 
 # outcomes table
-# patient characteristics table
 AST_REG_QA_QT_vs_AA_QT_table_outcomes <- dat %>%
   filter(AST_REG_QA_QT_vs_AA_QT_comparison != 0) %>% 
+  filter(in_follow_up_flag == 1) %>%
   mutate(AST_REG_QA_QT_vs_AA_QT_comparison = as.character(AST_REG_QA_QT_vs_AA_QT_comparison)) %>%
   mutate(AST_REG_QA_QT_vs_AA_QT_comparison = recode(AST_REG_QA_QT_vs_AA_QT_comparison,
                                                     `1` = "In current QOF only",
@@ -86,7 +86,8 @@ AST_REG_QA_QT_vs_AA_QT_table_outcomes <- dat %>%
 # manually create the rate variables for the outcomes table, as finalfit doesn't do this for us
 
 rate_results <- dat %>% group_by(AST_REG_QA_QT_vs_AA_QT_comparison) %>%
-  filter(AST_REG_QA_QT_vs_AA_QT_comparison != 0) %>%
+  filter(AST_REG_QA_QT_vs_AA_QT_comparison != 0) %>% 
+  filter(in_follow_up_flag == 1) %>%
   summarise(
     total_person_years = sum(followup_time_pys, na.rm = TRUE),
     total_attacks = sum(outcome_asthma_attacks, na.rm = TRUE)
@@ -105,7 +106,8 @@ p_value_temp <- poisson.test(c(rate_results$total_attacks[1], rate_results$total
 p_value <- if_else(p_value_temp < 0.001, "<0.001", sprintf("%.3f", round(p_value_temp, 3)))
 
 # do the same but for the 'total' column
-rate_results_total <- dat %>% filter(AST_REG_QA_QT_vs_AA_QT_comparison != 0) %>%
+rate_results_total <- dat %>% filter(AST_REG_QA_QT_vs_AA_QT_comparison != 0) %>% 
+  filter(in_follow_up_flag == 1) %>%
   summarise(
     total_person_years = sum(followup_time_pys, na.rm = TRUE),
     total_attacks = sum(outcome_asthma_attacks, na.rm = TRUE)

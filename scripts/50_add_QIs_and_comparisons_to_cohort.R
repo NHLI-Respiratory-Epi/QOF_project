@@ -79,6 +79,40 @@ dat$outcome_aecopd_bin <- factor(dat$outcome_aecopd_bin)
 summary(dat$outcome_aecopd_bin)
 
 
+# baseline asthma attacks are capped at 3+ - need to make this clear in variable
+dat$baseline_asthma_attacks_to_convert <- dat$baseline_asthma_attacks
+dat$baseline_aecopd_to_convert <- dat$baseline_aecopd
+dat$baseline_asthma_attacks <- NA
+dat$baseline_aecopd <- NA
+dat$baseline_asthma_attacks <- as.character(dat$baseline_asthma_attacks)
+dat$baseline_aecopd <- as.character(dat$baseline_aecopd)
+
+dat <- dat %>% mutate(baseline_asthma_attacks = case_when(
+  baseline_asthma_attacks_to_convert == 0 ~ "0",
+  baseline_asthma_attacks_to_convert == 1 ~ "1",
+  baseline_asthma_attacks_to_convert == 2 ~ "2",
+  baseline_asthma_attacks_to_convert >= 3 ~ "3+",
+  TRUE ~ NA_character_
+))
+
+dat$baseline_asthma_attacks <- factor(dat$baseline_asthma_attacks,
+                                        levels = c("0", "1", "2", "3+"))
+
+dat <- dat %>% mutate(baseline_aecopd = case_when(
+  baseline_aecopd_to_convert == 0 ~ "0",
+  baseline_aecopd_to_convert == 1 ~ "1",
+  baseline_aecopd_to_convert == 2 ~ "2",
+  baseline_aecopd_to_convert >= 3 ~ "3+",
+  TRUE ~ NA_character_
+))
+
+dat$baseline_aecopd <- factor(dat$baseline_aecopd,
+                                        levels = c("0", "1", "2", "3+"))
+
+summary(dat)
+
+dat$baseline_asthma_attacks_to_convert <- NULL
+dat$baseline_aecopd_to_convert <- NULL
 
 # we can label our pat characteristics variables at this point too:
 
@@ -93,6 +127,7 @@ dat <- dat %>%
          mhealth_qof = ff_label(mhealth_qof, "Mental health impairment"),
          hyperchol_qof = ff_label(hyperchol_qof, "Hypercholesterolemia"),
          htn_qof = ff_label(htn_qof, "Hypertension"),
+         frailty_qof = ff_label(frailty_qof, "Frailty"),
          gender = ff_label(gender, "Gender"),
          region = ff_label(region, "Region"),
          imd_2019_5 = ff_label(imd_2019_5, "Index of Multiple Deprivation (2019) quintiles"),
@@ -100,13 +135,16 @@ dat <- dat %>%
          eth19 = ff_label(eth19, "Ethnicity (19 categories)"),
          age = ff_label(age, "Age"),
          BMI_cat = ff_label(BMI_cat, "BMI category"),
-         baseline_asthma_attacks = ff_label(baseline_asthma_attacks, "Number of asthma attacks in reporting period"),
-         baseline_aecopd = ff_label(baseline_aecopd, "Number of AECOPD in reporting period"),
+         baseline_asthma_attacks = ff_label(baseline_asthma_attacks, "Number of asthma attacks in year prior to reporting period"),
+         baseline_aecopd = ff_label(baseline_aecopd, "Number of AECOPD  in year prior to reporting period"),
          outcome_asthma_attacks_bin = ff_label(outcome_asthma_attacks_bin, "One or more asthma attacks during follow-up"),
          outcome_aecopd_bin = ff_label(outcome_aecopd_bin, "One or more AECOPD during follow-up"),
          outcome_asthma_attacks = ff_label(outcome_asthma_attacks, "Number of asthma attacks during follow-up"),
          outcome_aecopd = ff_label(outcome_aecopd, "Number of AECOPD during follow-up"),
          followup_time_pys = ff_label(followup_time_pys, "Follow-up time in person-years"))
+
+# move frailty_qof to before htn_qof using relocate
+dat <- dat %>% relocate(frailty_qof, .before = htn_qof)
 
 # summary_factorlist(dat, dependent = "gender", explanatory = "gord")
 # add in the comparisons - asthma first
@@ -119,7 +157,7 @@ dat <- full_join(dat, asthma, by = "patid")
 
 # add in others as they come in
 
-copd <- readRDS("Z:/Group_work/QOF_project/Data/COPD/cohort/06_cohort_COPD_with_comparison_vars.RDS")
+copd <- readRDS("Z:/Group_work/QOF_project/Data/COPD/cohort/06_cohort_COPD_with_comparison_vars2.RDS")
 
 colnames(copd)
 
@@ -127,7 +165,28 @@ dat <- full_join(dat, copd, by = "patid")
 
 colnames(dat)
 
+# Hypertension (prelim)
 
+hyp <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hypertension_with_HYP_indicators.RDS")
+
+colnames(hyp)
+hyp <- hyp %>% dplyr::select(patid, HYP_REG, HYP008_nume, HYP008_denom, 
+                             HYP009_nume, HYP009_denom)
+
+dat <- full_join(dat, hyp, by = "patid")
+
+
+# smoking (prelim)
+
+smoking <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_with_rules.RDS")
+colnames(smoking)
+
+smoking <- smoking %>% dplyr::select(patid, SMOK1_REG, SMOK2_REG, 
+                                     SMOK002_denominator, SMOK002_numerator,
+                                     SMOK004_denominator, SMOK004_numerator,
+                                     SMOK005_denominator, SMOK005_numerator)
+
+dat <- full_join(dat, smoking, by = "patid")
 # we can label the current QOF register and indicator variables
 
 
@@ -164,6 +223,13 @@ dat <- dat %>%
          COPD014_denom_QC = ff_label(COPD014_denom_QC, 
                                        "COPD014 (referral to PR) denominator"),
          COPD014_num_QC = ff_label(COPD014_num_QC, 
-                                      "COPD014 (referral to PR) numerator"))
+                                      "COPD014 (referral to PR) numerator"),
+         AST007_inc_exc_type_QA_QT = ff_label(AST007_inc_exc_type_QA_QT, 
+                                              "AST007 (asthma review) selected/rejected categories"),
+         AST008_inc_exc_type_QA_QT = ff_label(AST008_inc_exc_type_QA_QT, 
+                                              "AST008 (exposure to smoking) selected/rejected categories"),
+  )
+
+
         
 saveRDS(dat, "Z:/Group_work/QOF_project/Data/cohort/50_temp_cohort_asthma_QI_comps_added.RDS")
