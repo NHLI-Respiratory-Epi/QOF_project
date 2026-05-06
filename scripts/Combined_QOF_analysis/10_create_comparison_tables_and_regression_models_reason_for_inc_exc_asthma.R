@@ -270,7 +270,7 @@ coef_table_adj_me_clean$IRR_CI[coef_table_adj_me_clean$` ` == "Indeterminate"] <
 
 
 # write this table
-coef_table_adj_me_clean %>% select(term, IRR_CI) %>% 
+coef_table_adj_me_clean %>%  
   writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_me_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
 
 #---------------------------------------------#
@@ -285,7 +285,7 @@ nb_model_adj_fe <- glmmTMB::glmmTMB(as.formula(paste0("outcome_asthma_attacks ~ 
                                     family = glmmTMB::nbinom2(link = "log"),
                                     control = glmmTMBControl(parallel = 48))
 Sys.time()
-# saveRDS(nb_model_adj_fe, "Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_fe_AST007_inc_exc_type_QA_QT.RDS")
+saveRDS(nb_model_adj_fe, "Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_fe_AST007_inc_exc_type_QA_QT.RDS")
 
 # extract icc
 icc <- performance::icc(nb_model_adj_fe)
@@ -328,7 +328,7 @@ coef_table_adj_fe_clean$IRR_CI[coef_table_adj_fe_clean$` ` == "Indeterminate"] <
 
 
 # write this table
-coef_table_adj_fe_clean %>% select(term, IRR_CI) %>% 
+coef_table_adj_fe_clean %>% 
   writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_fe_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
 
 
@@ -371,7 +371,7 @@ coef_table_unadj_me <- summary(nb_model_unadj_me)$coefficients$cond %>%
   filter(term != "(Intercept)")
 
 # combine with the skeleton table
-coef_table_unadj_me_clean <- left_join(coef_table_skeleton, coef_table_unadj_me, by = "term")
+coef_table_unadj_me_clean <- left_join(coef_table_skeleton_unadj, coef_table_unadj_me, by = "term")
 
 coef_table_unadj_me_clean <- coef_table_unadj_me_clean[ ,c(2, 3, 11)]
 coef_table_unadj_me_clean$IRR_CI[is.na(coef_table_unadj_me_clean$IRR_CI)] <- "-"
@@ -388,7 +388,7 @@ coef_table_unadj_me_clean$IRR_CI[coef_table_unadj_me_clean$` ` == "Indeterminate
 
 
 # write this table
-coef_table_unadj_me_clean %>% select(term, IRR_CI) %>% 
+coef_table_unadj_me_clean %>% 
   writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_unadj_me_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
 
 #---------------------------------------------#
@@ -428,7 +428,7 @@ coef_table_unadj_fe <- summary(nb_model_unadj_fe)$coefficients$cond %>%
   filter(term != "(Intercept)")
 
 # combine with the skeleton table
-coef_table_unadj_fe_clean <- left_join(coef_table_skeleton, coef_table_unadj_fe, by = "term")
+coef_table_unadj_fe_clean <- left_join(coef_table_skeleton_unadj, coef_table_unadj_fe, by = "term")
 
 coef_table_unadj_fe_clean <- coef_table_unadj_fe_clean[ ,c(2, 3, 11)]
 coef_table_unadj_fe_clean$IRR_CI[is.na(coef_table_unadj_fe_clean$IRR_CI)] <- "-"
@@ -445,6 +445,6 @@ coef_table_unadj_fe_clean$IRR_CI[coef_table_unadj_fe_clean$` ` == "Indeterminate
 
 
 # write this table
-coef_table_unadj_fe_clean %>% select(term, IRR_CI) %>% 
+coef_table_unadj_fe_clean %>% 
   writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_unadj_fe_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
 
