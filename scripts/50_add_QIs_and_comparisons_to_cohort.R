@@ -165,13 +165,106 @@ dat <- full_join(dat, copd, by = "patid")
 
 colnames(dat)
 
-# Hypertension (prelim)
+# Hypertension
 
-hyp <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hypertension_with_HYP_indicators.RDS")
+# scenarios for hypertension:
 
-colnames(hyp)
-hyp <- hyp %>% dplyr::select(patid, HYP_REG, HYP008_nume, HYP008_denom, 
+# QOF baseline: QC_QR # QOF codes, QOF rules; "Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hypertension_with_HYP_indicators.RDS"
+# QOF codes, 24hr_excluded (no night) : QC_NN "Z:/Group_work/QOF_project/Data/Hypertension/cohort/4_cohort_hypertension_with_HYP_indicators.RDS"
+# QOF codes, different thresholds (variant thresholds)  : QC_VT "Z:/Group_work/QOF_project/Data/Hypertension/cohort/6_cohort_hypertension_with_HYP_indicators.RDS"
+# updated codes, QOF rules; UC_QR: "Z:/Group_work/QOF_project/Data/Hypertension/cohort/B2_cohort_hypertension_with_HYP_indicators.RDS"
+# updated codes, 24hr_excluded (no night) : UC_NN "Z:/Group_work/QOF_project/Data/Hypertension/cohort/B4_cohort_hypertension_with_HYP_indicators.RDS"
+# updated codes, different thresholds (variant thresholds)  : UC_VT "Z:/Group_work/QOF_project/Data/Hypertension/cohort/B6_cohort_hypertension_with_HYP_indicators.RDS"
+
+
+# testing
+
+hyp1 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hypertension_with_HYP_indicators.RDS")
+
+hyp1 <- hyp1 %>% select(patid, HYP_DAT_QC = HYP_DAT)
+
+hyp4 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/B2_cohort_hypertension_with_HYP_indicators.RDS")
+
+hyp4 <- hyp4 %>% select(patid, HYP_DAT_UC = HYP_DAT)
+
+test <- full_join(hyp1, hyp4, by = "patid")
+
+test$HYP_DAT_QC_bin <- NA
+test$HYP_DAT_QC_bin[is.na(test$HYP_DAT_QC)] <- 0
+test$HYP_DAT_QC_bin[!is.na(test$HYP_DAT_QC)] <- 1
+
+
+
+test$HYP_DAT_UC_bin <- NA
+test$HYP_DAT_UC_bin[is.na(test$HYP_DAT_UC)] <- 0
+test$HYP_DAT_UC_bin[!is.na(test$HYP_DAT_UC)] <- 1
+
+test %>% select(HYP_DAT_QC_bin, HYP_DAT_UC_bin) %>% table()
+
+
+test %>% select(-patid) %>% table()
+
+hyp1 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hypertension_with_HYP_indicators.RDS")
+
+
+colnames(hyp1)
+
+hyp1 %>% pull(HYP_DAT) %>% summary()
+
+hyp1 <- hyp1 %>% dplyr::select(patid, HYP_REG, HYP008_nume, HYP008_denom, 
                              HYP009_nume, HYP009_denom)
+# rename all columns apart from patid. 
+
+colnames(hyp1)[-1] <- paste0(colnames(hyp1)[-1], "_QC_QR")
+
+hyp2 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/4_cohort_hypertension_with_HYP_indicators.RDS")
+
+colnames(hyp2)
+
+hyp2 %>% pull(HYP_DAT) %>% summary()
+
+
+hyp2 <- hyp2 %>% dplyr::select(patid, HYP_REG,
+                             HYP008_nume, HYP008_denom, 
+                             HYP009_nume, HYP009_denom)
+colnames(hyp2)[-1] <- paste0(colnames(hyp2)[-1], "_QC_NN")
+
+hyp3 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/6_cohort_hypertension_with_HYP_indicators.RDS")
+hyp3 <- hyp3 %>% dplyr::select(patid, HYP_REG,
+                             HYP008_nume, HYP008_denom,
+                             HYP009_nume, HYP009_denom)
+colnames(hyp3)[-1] <- paste0(colnames(hyp3)[-1], "_QC_VT")
+
+hyp4 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/B2_cohort_hypertension_with_HYP_indicators.RDS")
+
+colnames(hyp4)
+hyp4 %>% pull(HYP_DAT) %>% summary()
+
+
+
+
+hyp4 <- hyp4 %>% dplyr::select(patid, HYP_REG,
+                             HYP008_nume, HYP008_denom,
+                             HYP009_nume, HYP009_denom)
+colnames(hyp4)[-1] <- paste0(colnames(hyp4)[-1], "_UC_QR")
+
+hyp5 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/B4_cohort_hypertension_with_HYP_indicators.RDS")
+hyp5 <- hyp5 %>% dplyr::select(patid, HYP_REG,
+                             HYP008_nume, HYP008_denom,
+                             HYP009_nume, HYP009_denom)
+colnames(hyp5)[-1] <- paste0(colnames(hyp5)[-1], "_UC_NN")
+
+hyp6 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/B6_cohort_hypertension_with_HYP_indicators.RDS")
+hyp6 <- hyp6 %>% dplyr::select(patid, HYP_REG,
+                             HYP008_nume, HYP008_denom,
+                             HYP009_nume, HYP009_denom)
+colnames(hyp6)[-1] <- paste0(colnames(hyp6)[-1], "_UC_VT")
+
+hyp <- hyp1 %>% full_join(., hyp2, by = c("patid")) %>%
+  full_join(., hyp3, by = c("patid")) %>%
+  full_join(., hyp4, by = c("patid")) %>%
+  full_join(., hyp5, by = c("patid")) %>%
+  full_join(., hyp6, by = c("patid")) 
 
 dat <- full_join(dat, hyp, by = "patid")
 
