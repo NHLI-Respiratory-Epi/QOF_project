@@ -183,6 +183,12 @@ hyp1 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hyp
 
 hyp1 <- hyp1 %>% select(patid, HYP_DAT_QC = HYP_DAT)
 
+hyp_alt <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/B1_cohort_hypertension_with_DAT_cols.RDS")
+
+sort(colnames(hyp_alt))
+
+hyp_alt <- hyp_alt %>% select(patid, HYP_DAT_ALT = HYP_DAT)
+
 hyp4 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/B2_cohort_hypertension_with_HYP_indicators.RDS")
 
 hyp4 <- hyp4 %>% select(patid, HYP_DAT_UC = HYP_DAT)
@@ -199,7 +205,15 @@ test$HYP_DAT_UC_bin <- NA
 test$HYP_DAT_UC_bin[is.na(test$HYP_DAT_UC)] <- 0
 test$HYP_DAT_UC_bin[!is.na(test$HYP_DAT_UC)] <- 1
 
+test <- full_join(test, hyp_alt, by = "patid")
+
+test$HYP_DAT_ALT_bin <- NA
+test$HYP_DAT_ALT_bin[is.na(test$HYP_DAT_ALT)] <- 0
+test$HYP_DAT_ALT_bin[!is.na(test$HYP_DAT_ALT)] <- 1
+
+
 test %>% select(HYP_DAT_QC_bin, HYP_DAT_UC_bin) %>% table()
+test %>% select(HYP_DAT_QC_bin, HYP_DAT_ALT_bin) %>% table()
 
 
 test %>% select(-patid) %>% table()
@@ -271,13 +285,26 @@ dat <- full_join(dat, hyp, by = "patid")
 
 # smoking (prelim)
 
-smoking <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_with_rules.RDS")
-colnames(smoking)
+# smoking <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_with_rules.RDS")
+smoking <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/8_cohort_smoking_full.RDS")
+
+
+smoking %>% select(contains("SMOK1_REG")) %>% table()
+smoking %>% select(contains("SMOK2_REG")) %>% table()
+smoking %>% select(contains("SMOK002_denominator")) %>% table()
+smoking %>% select(contains("SMOK004_denominator")) %>% table()
+smoking %>% select(contains("SMOK005_denominator")) %>% table()
+
+summary(smoking)
 
 smoking <- smoking %>% dplyr::select(patid, SMOK1_REG, SMOK2_REG, 
                                      SMOK002_denominator, SMOK002_numerator,
                                      SMOK004_denominator, SMOK004_numerator,
                                      SMOK005_denominator, SMOK005_numerator)
+
+
+smoking_update <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_with_rules.RDS")
+
 
 dat <- full_join(dat, smoking, by = "patid")
 # we can label the current QOF register and indicator variables
