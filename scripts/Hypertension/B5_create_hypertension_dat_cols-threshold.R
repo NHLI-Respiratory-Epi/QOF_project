@@ -47,7 +47,7 @@ HYPDIAG_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/R
   
   
   obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
+  obs <- obs
   obs <- obs[ , .(patid, obsdate)]
   obs <- unique(obs)
   

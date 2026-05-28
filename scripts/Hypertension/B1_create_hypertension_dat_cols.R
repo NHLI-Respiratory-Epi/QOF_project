@@ -43,9 +43,8 @@ HYPDIAG_DAT_pipe <- function(obsfile, rds_dir = "X:/QOF_project/Data/tidy_data/R
     dplyr::pull(snomedctconceptid) %>% unique()
   
   
-  
   obs <- obs[snomedctconceptid %in% EXTRACT_COD]
-  obs <- obs[obsdate <= "2024-03-31" & obsdate > "2023-03-31"]
+  obs <- obs
   obs <- obs[ , .(patid, obsdate)]
   obs <- unique(obs)
   
@@ -79,7 +78,6 @@ HYPDIAG_DAT <- rbindlist(HYPDIAGDAT_big)
 HYPDIAG_DAT <- unique(HYPDIAG_DAT)
 
 # join with subsection of our cohort
-
 HYPDIAG_DAT <- left_join(HYPDIAG_DAT, dplyr::select(dat, patid, ACHV, QSSD), by = "patid")
 
 head(HYPDIAG_DAT)
