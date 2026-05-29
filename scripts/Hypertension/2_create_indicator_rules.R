@@ -90,6 +90,61 @@ sum(dat$HYP008_nume)/sum(dat$HYP008_denom)
 
 
 
+
+# # AST007
+# dat <- dat %>% mutate(AST007_inc_exc_type = case_when(
+#   AST007_denom_RN1 == 1 & AST_REG == 1 ~ "Included in numerator",
+#   AST_REG == 0 | AST007_denom_RN6 == 1 | AST007_denom_RN7 == 1 ~ NA_character_, # not included in either because not registered or newly registered or new diagnosis
+#   AST007_denom_RN2 == 1 ~ "Rejected as unsuitable",
+#   AST007_denom_RN3 == 1 | AST007_denom_RN4 == 1 ~ "Rejected as declined care",
+#   AST007_denom_RN5 == 1 ~ "Rejected as invited",
+#   TRUE ~ "Included in denominator"
+# ))
+# 
+# #
+# table(dat$AST007_inc_exc_type) # check that these roughly match Sankey diagram
+# # (won't be exact as order is changed)
+# 
+# # make factor
+# dat$AST007_inc_exc_type <- factor(dat$AST007_inc_exc_type, 
+#                                   levels = c("Included in numerator",
+#                                              "Included in denominator",
+#                                              "Rejected as unsuitable",
+#                                              "Rejected as declined care",
+#                                              "Rejected as invited"))
+
+
+# apply the process in AST007 to HYP008
+
+dat <- dat %>% mutate(HYP008_inc_exc_type = case_when(
+  HYP_REG == 1 & HYP008_denom_RN1 == 0 & (HYP008_denom_RN2 == 1 | HYP008_denom_RN3 == 1)  ~ "Included in numerator",
+  HYP_REG == 0 | HYP008_denom_RN1 == 1 | HYP008_denom_RN9 == 1 | 
+    HYP008_denom_RN10 == 1  ~ NA_character_, # not included in either because not on register, or not correct age, 
+                                             # or not registered or newly registered or new diagnosis
+  HYP008_denom_RN4 == 1 ~ "Rejected as on maximal therapy",
+  HYP008_denom_RN5 == 1 ~ "Rejected as unsuitable",
+  HYP008_denom_RN6 == 1 | HYP008_denom_RN7 == 1 ~ "Rejected as declined care",
+  HYP008_denom_RN8 == 1 ~ "Rejected as invited",
+  TRUE ~ "Included in denominator"
+))
+
+
+table(dat$HYP008_inc_exc_type) # check that these roughly match Sankey diagram
+
+table(dat$HYP008_inc_exc_type) # check that these roughly match Sankey diagram
+# (won't be exact as order is changed)
+
+# make factor
+dat$HYP008_inc_exc_type <- factor(dat$HYP008_inc_exc_type,
+                                  levels = c("Included in numerator",
+                                             "Included in denominator",
+                                             "Rejected as on maximal therapy",
+                                             "Rejected as unsuitable",
+                                             "Rejected as declined care",
+                                             "Rejected as invited"))
+
+summary(dat$HYP008_inc_exc_type)
+
 # We can try HYP009 while we are at it...
 
 
@@ -155,6 +210,39 @@ dat <- dat %>% mutate(HYP009_nume = if_else(HYP009_denom == 1 &
 
 # the big reveal... 
 sum(dat$HYP009_nume)/sum(dat$HYP009_denom)
+
+
+dat <- dat %>% mutate(HYP009_inc_exc_type = case_when(
+  HYP_REG == 1 & HYP009_denom_RN1 == 0 & (HYP009_denom_RN2 == 1 | HYP009_denom_RN3 == 1)  ~ "Included in numerator",
+  HYP_REG == 0 | HYP009_denom_RN1 == 1 | HYP009_denom_RN9 == 1 | 
+    HYP009_denom_RN10 == 1  ~ NA_character_, # not included in either because not on register, or not correct age, 
+  # or not registered or newly registered or new diagnosis
+  HYP009_denom_RN4 == 1 ~ "Rejected as on maximal therapy",
+  HYP009_denom_RN5 == 1 ~ "Rejected as unsuitable",
+  HYP009_denom_RN6 == 1 | HYP009_denom_RN7 == 1 ~ "Rejected as declined care",
+  HYP009_denom_RN8 == 1 ~ "Rejected as invited",
+  TRUE ~ "Included in denominator"
+))
+
+
+table(dat$HYP009_inc_exc_type) # check that these roughly match Sankey diagram
+
+table(dat$HYP009_inc_exc_type) # check that these roughly match Sankey diagram
+# (won't be exact as order is changed)
+
+# make factor
+dat$HYP009_inc_exc_type <- factor(dat$HYP009_inc_exc_type,
+                                  levels = c("Included in numerator",
+                                             "Included in denominator",
+                                             "Rejected as on maximal therapy",
+                                             "Rejected as unsuitable",
+                                             "Rejected as declined care",
+                                             "Rejected as invited"))
+
+summary(dat$HYP009_inc_exc_type)
+
+
+
 
 
 # all seems good to me!

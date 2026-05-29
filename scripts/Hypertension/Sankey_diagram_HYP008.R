@@ -10,7 +10,7 @@ library(htmlwidgets)
 
 
 #--------------- read in data with rules columns
-dat <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/4_cohort_hypertension_with_HYP_indicators.RDS")
+dat <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hypertension_with_HYP_indicators.RDS")
 
 
 #------------------ this just helps show how the rules have been created:
