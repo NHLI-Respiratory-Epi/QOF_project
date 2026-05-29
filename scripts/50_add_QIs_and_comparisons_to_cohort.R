@@ -177,53 +177,8 @@ colnames(dat)
 # updated codes, different thresholds (variant thresholds)  : UC_VT "Z:/Group_work/QOF_project/Data/Hypertension/cohort/B6_cohort_hypertension_with_HYP_indicators.RDS"
 
 
-# testing
 
 hyp1 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hypertension_with_HYP_indicators.RDS")
-
-hyp1 <- hyp1 %>% select(patid, HYP_DAT_QC = HYP_DAT)
-
-hyp_alt <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/B1_cohort_hypertension_with_DAT_cols.RDS")
-
-sort(colnames(hyp_alt))
-
-hyp_alt <- hyp_alt %>% select(patid, HYP_DAT_ALT = HYP_DAT)
-
-hyp4 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/B2_cohort_hypertension_with_HYP_indicators.RDS")
-
-hyp4 <- hyp4 %>% select(patid, HYP_DAT_UC = HYP_DAT)
-
-test <- full_join(hyp1, hyp4, by = "patid")
-
-test$HYP_DAT_QC_bin <- NA
-test$HYP_DAT_QC_bin[is.na(test$HYP_DAT_QC)] <- 0
-test$HYP_DAT_QC_bin[!is.na(test$HYP_DAT_QC)] <- 1
-
-
-
-test$HYP_DAT_UC_bin <- NA
-test$HYP_DAT_UC_bin[is.na(test$HYP_DAT_UC)] <- 0
-test$HYP_DAT_UC_bin[!is.na(test$HYP_DAT_UC)] <- 1
-
-test <- full_join(test, hyp_alt, by = "patid")
-
-test$HYP_DAT_ALT_bin <- NA
-test$HYP_DAT_ALT_bin[is.na(test$HYP_DAT_ALT)] <- 0
-test$HYP_DAT_ALT_bin[!is.na(test$HYP_DAT_ALT)] <- 1
-
-
-test %>% select(HYP_DAT_QC_bin, HYP_DAT_UC_bin) %>% table()
-test %>% select(HYP_DAT_QC_bin, HYP_DAT_ALT_bin) %>% table()
-
-
-test %>% select(-patid) %>% table()
-
-hyp1 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hypertension_with_HYP_indicators.RDS")
-
-
-colnames(hyp1)
-
-hyp1 %>% pull(HYP_DAT) %>% summary()
 
 hyp1 <- hyp1 %>% dplyr::select(patid, HYP_REG, HYP008_nume, HYP008_denom, 
                              HYP009_nume, HYP009_denom)
@@ -232,11 +187,6 @@ hyp1 <- hyp1 %>% dplyr::select(patid, HYP_REG, HYP008_nume, HYP008_denom,
 colnames(hyp1)[-1] <- paste0(colnames(hyp1)[-1], "_QC_QR")
 
 hyp2 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/4_cohort_hypertension_with_HYP_indicators.RDS")
-
-colnames(hyp2)
-
-hyp2 %>% pull(HYP_DAT) %>% summary()
-
 
 hyp2 <- hyp2 %>% dplyr::select(patid, HYP_REG,
                              HYP008_nume, HYP008_denom, 
@@ -250,12 +200,6 @@ hyp3 <- hyp3 %>% dplyr::select(patid, HYP_REG,
 colnames(hyp3)[-1] <- paste0(colnames(hyp3)[-1], "_QC_VT")
 
 hyp4 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/B2_cohort_hypertension_with_HYP_indicators.RDS")
-
-colnames(hyp4)
-hyp4 %>% pull(HYP_DAT) %>% summary()
-
-
-
 
 hyp4 <- hyp4 %>% dplyr::select(patid, HYP_REG,
                              HYP008_nume, HYP008_denom,
@@ -295,6 +239,7 @@ smoking %>% select(contains("SMOK002_denominator")) %>% table()
 smoking %>% select(contains("SMOK004_denominator")) %>% table()
 smoking %>% select(contains("SMOK005_denominator")) %>% table()
 
+colnames(smoking)
 summary(smoking)
 
 smoking <- smoking %>% dplyr::select(patid, SMOK1_REG, SMOK2_REG, 
