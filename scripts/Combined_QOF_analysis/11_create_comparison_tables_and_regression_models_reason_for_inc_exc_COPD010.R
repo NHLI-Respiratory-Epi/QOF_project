@@ -13,7 +13,7 @@ library(glmmTMB)
 library(broom)
 
 
-dat <- readRDS("Z:/Group_work/QOF_project/Data/cohort/50_temp_cohort_asthma_QI_comps_added.RDS")
+dat <- readRDS("Z:/Group_work/QOF_project/Data/cohort/07_finalised_cohort_with_QI_comps_added.RDS")
 colnames(dat)
 # # # update table titles here!!!
 # comparison_OI = comparison of interest
