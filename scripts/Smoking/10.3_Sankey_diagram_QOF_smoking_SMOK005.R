@@ -12,7 +12,7 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_w
 
 # ensure they are in the integer format
 dat <- dat %>% select(patid, starts_with("SMOK1_REG"), starts_with("SMOK2_REG"), starts_with("SMOK0"))
-dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
+# dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
 
 str(dat)
 # created using the help of this web page: 
@@ -85,7 +85,6 @@ SMOK005_denom_RN7_rejected_N <- dat %>% filter(SMOK1_REG == 1 &
                                                  SMOK005_denom_RN4 == 0 & 
                                                  SMOK005_denom_RN5 == 0 & 
                                                  SMOK005_denom_RN6 == 0 & 
-                                                 SMOK005_denom_RN7 == 0 & 
                                                  SMOK005_denom_RN7 == 1)  %>% nrow()
 
 SMOK005_denom_RN7_selected_N <- dat %>% filter(SMOK1_REG == 1 &     
@@ -95,7 +94,6 @@ SMOK005_denom_RN7_selected_N <- dat %>% filter(SMOK1_REG == 1 &
                                                  SMOK005_denom_RN4 == 0 & 
                                                  SMOK005_denom_RN5 == 0 & 
                                                  SMOK005_denom_RN6 == 0 & 
-                                                 SMOK005_denom_RN7 == 0 & 
                                                  SMOK005_denom_RN7 == 0)  %>% nrow()
 
 
@@ -143,8 +141,7 @@ nodes <- data.frame("name" = c("Smoking \nregister ", "Rejected rule 1: Did not 
                                "Rejected rule 4: Declined QI care",
                                "Rejected rule 5: Did not respond to smoking care review invitations",
                                "Rejected rule 6: Recently diagnosed with any of above conditions",
-                               # "Rejected rule 7: Registered at practice <3 months",
-                              " ",
+                               "Rejected rule 7: Registered at practice <3 months",
                                "Selected rule 7: Remainder in denominator"),
                     "group" = c("register", "excluded", "selected_numerator", "excluded",
                                 "excluded", "excluded", "excluded", 

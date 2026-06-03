@@ -12,7 +12,7 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_w
 
 # ensure they are in the integer format
 dat <- dat %>% select(patid, starts_with("SMOK1_REG"), starts_with("SMOK2_REG"), starts_with("SMOK0"))
-dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
+# dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
 
 str(dat)
 # created using the help of this web page: 
@@ -61,7 +61,7 @@ SMOK002_denom_RN2_N <- dat %>% filter(SMOK1_REG == 1 &
 
 SMOK002_denom_RN3_N <- dat %>% filter(SMOK1_REG == 1 &     SMOK002_denom_RN1 == 1 & 
                                        SMOK002_denom_RN2 == 0 & 
-                                       SMOK002_denom_RN3 == 0 )  %>% nrow()
+                                       SMOK002_denom_RN3 == 1)  %>% nrow()
 
 
 SMOK002_denom_RN4_N <- dat %>% filter(SMOK1_REG == 1 &     SMOK002_denom_RN1 == 1 &  
@@ -253,7 +253,7 @@ links = as.data.frame(matrix(c(
                                0, 10, SMOK002_denom_RN10_N,
                                0, 11, SMOK002_denom_RN11_N,
                                0, 12, SMOK002_denom_RN12_rejected_N,
-                               0, 12, SMOK002_denom_RN12_selected_N),
+                               0, 13, SMOK002_denom_RN12_selected_N),
                              byrow = TRUE, ncol = 3))
 # this line provides column names to the newly created 'links' data frame
 names(links) = c("source", "target", "value")

@@ -12,7 +12,7 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_w
 
 # ensure they are in the integer format
 dat <- dat %>% select(patid, starts_with("SMOK1_REG"), starts_with("SMOK2_REG"), starts_with("SMOK0"))
-dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
+# dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
 
 str(dat)
 # created using the help of this web page: 
