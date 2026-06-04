@@ -5,12 +5,64 @@ library(bit64)
 
 # read in each cohort
 QOF_AST_QOF_ASTTRT <- readRDS("X:/QOF_project/Data/Asthma/cohort/3_cohort_asthma_with_AST_indicators.RDS")
+
+# change so must have secondhand smoking and current smoking to pass for AST008
+
+QOF_AST_QOF_ASTTRT$AST008_nume_alt <- 0
+QOF_AST_QOF_ASTTRT$AST008_nume_alt[QOF_AST_QOF_ASTTRT$AST008_denom == 1 &
+                                     QOF_AST_QOF_ASTTRT$AST008_nume_RN1 == 1 &
+                                     (QOF_AST_QOF_ASTTRT$AST008_nume_RN2 == 1 |
+                                     QOF_AST_QOF_ASTTRT$AST008_nume_RN3 == 1) ] <- 1 
+
 QOF_AST_broad_ASTTRT <- readRDS("X:/QOF_project/Data/Asthma/cohort/5_cohort_asthma_with_AST_indicators_alt_ASTTRT_broad.RDS")
+
+# change so must have secondhand smoking and current smoking to pass for AST008
+
+QOF_AST_broad_ASTTRT$AST008_nume_alt <- 0
+QOF_AST_broad_ASTTRT$AST008_nume_alt[QOF_AST_broad_ASTTRT$AST008_denom == 1 &
+                                     QOF_AST_broad_ASTTRT$AST008_nume_RN1 == 1 &
+                                     (QOF_AST_broad_ASTTRT$AST008_nume_RN2 == 1 |
+                                        QOF_AST_broad_ASTTRT$AST008_nume_RN3 == 1) ] <- 1 
+
 QOF_AST_ics_ASTTRT <- readRDS("X:/QOF_project/Data/Asthma/cohort/6_cohort_asthma_with_AST_indicators_alt_ASTTRT_ics.RDS")
 
+# change so must have secondhand smoking and current smoking to pass for AST008
+
+QOF_AST_ics_ASTTRT$AST008_nume_alt <- 0
+QOF_AST_ics_ASTTRT$AST008_nume_alt[QOF_AST_ics_ASTTRT$AST008_denom == 1 &
+                                     QOF_AST_ics_ASTTRT$AST008_nume_RN1 == 1 &
+                                     (QOF_AST_ics_ASTTRT$AST008_nume_RN2 == 1 |
+                                        QOF_AST_ics_ASTTRT$AST008_nume_RN3 == 1) ] <- 1 
+
 alt_AST_QOF_ASTTRT <- readRDS("X:/QOF_project/Data/Asthma/cohort/8_cohort_asthma_with_AST_indicators_alt_AST_DAT.RDS")
+
+# change so must have secondhand smoking and current smoking to pass for AST008
+
+alt_AST_QOF_ASTTRT$AST008_nume_alt <- 0
+alt_AST_QOF_ASTTRT$AST008_nume_alt[alt_AST_QOF_ASTTRT$AST008_denom == 1 &
+                                     alt_AST_QOF_ASTTRT$AST008_nume_RN1 == 1 &
+                                     (alt_AST_QOF_ASTTRT$AST008_nume_RN2 == 1 |
+                                        alt_AST_QOF_ASTTRT$AST008_nume_RN3 == 1) ] <- 1 
+
 alt_AST_broad_ASTTRT <- readRDS("X:/QOF_project/Data/Asthma/cohort/9_cohort_asthma_with_AST_indicators_alt_AST_DAT_alt_ASTTRT_broad.RDS")
+
+# change so must have secondhand smoking and current smoking to pass for AST008
+
+alt_AST_broad_ASTTRT$AST008_nume_alt <- 0
+alt_AST_broad_ASTTRT$AST008_nume_alt[alt_AST_broad_ASTTRT$AST008_denom == 1 &
+                                     alt_AST_broad_ASTTRT$AST008_nume_RN1 == 1 &
+                                     (alt_AST_broad_ASTTRT$AST008_nume_RN2 == 1 |
+                                        alt_AST_broad_ASTTRT$AST008_nume_RN3 == 1) ] <- 1 
+
 alt_AST_ics_ASTTRT <- readRDS("X:/QOF_project/Data/Asthma/cohort/10_cohort_asthma_with_AST_indicators_alt_AST_DAT_alt_ASTTRT_ics.RDS")
+
+# change so must have secondhand smoking and current smoking to pass for AST008
+
+alt_AST_ics_ASTTRT$AST008_nume_alt <- 0
+alt_AST_ics_ASTTRT$AST008_nume_alt[alt_AST_ics_ASTTRT$AST008_denom == 1 &
+                                     alt_AST_ics_ASTTRT$AST008_nume_RN1 == 1 &
+                                     (alt_AST_ics_ASTTRT$AST008_nume_RN2 == 1 |
+                                        alt_AST_ics_ASTTRT$AST008_nume_RN3 == 1) ] <- 1 
 
 # create a function that will label the variables for each cohort to distinguish them
 add_deets <- function(dat, definition) {
