@@ -149,7 +149,7 @@ colnames(dat)
 # [267] "SMOK004_numerator_new"                  "SMOK004_denominator_new"               
 # [269] "SMOK005_numerator_new"                  "SMOK005_denominator_new"            
 
-COPD_old <- dat %>% summarise(situation = "COPD QOF",
+COPD_old <- dat %>% summarise(situation = "COPD QOF 2025-26",
                               pat_N = n(),
                               COPD_REG = sum(COPD_REG_QC),
                               COPD_REG_perc = sprintf("%.1f", round((sum(COPD_REG_QC)/nrow(dat))*100,1)),
@@ -162,7 +162,7 @@ COPD_old <- dat %>% summarise(situation = "COPD QOF",
 
 # do COPD_VC_VP
 
-COPD_validated <- dat %>% summarise(situation = "COPD Updated QOF",
+COPD_validated <- dat %>% summarise(situation = "COPD QOF 2026-27",
                                     pat_N = n(),
                               COPD_REG = sum(COPD_REG_VC_VP),
                               COPD_REG_perc = sprintf("%.1f", round((sum(COPD_REG_VC_VP)/nrow(dat))*100,1)),
@@ -175,7 +175,7 @@ COPD_validated <- dat %>% summarise(situation = "COPD Updated QOF",
 
 # do COPD_UC
 
-COPD_updated <- dat %>% summarise(situation = "Updated COPD diagnosis codes",
+COPD_updated <- dat %>% summarise(situation = "COPD Post-review",
                                   pat_N = n(),
                               COPD_REG = sum(COPD_REG_UC),
                               COPD_REG_perc = sprintf("%.1f", round((sum(COPD_REG_UC)/nrow(dat))*100,1)),
@@ -191,7 +191,7 @@ COPD <- bind_rows(COPD_old, COPD_validated, COPD_updated)
 
 # and now do the same for asthma
 
-asthma_old <- dat %>% summarise(situation = "Asthma QOF",
+asthma_old <- dat %>% summarise(situation = "Asthma QOF 2026-27",
                               pat_N = n(),
                               AST_REG = sum(AST_REG_QA_QT),
                               AST_REG_perc = sprintf("%.1f", round((sum(AST_REG_QA_QT)/nrow(dat))*100,1)),
@@ -207,26 +207,26 @@ asthma_old <- dat %>% summarise(situation = "Asthma QOF",
 
 # do the same for AA_QT
 
-asthma_updated <- dat %>% summarise(situation = "Updated asthma diagnosis codes",
+asthma_updated <- dat %>% summarise(situation = "Asthma post-review",
                                     pat_N = n(),
-                              AST_REG = sum(AST_REG_AA_QT),
-                              AST_REG_perc = sprintf("%.1f", round((sum(AST_REG_AA_QT)/nrow(dat))*100,1)),
-                              AST007_denom = sum(AST007_denom_AA_QT),
-                              AST007_num = sum(AST007_nume_AA_QT),
-                              AST007_perc = sprintf("%.1f", round((sum(AST007_nume_AA_QT)/sum(AST007_denom_AA_QT))*100,1)),
-                              AST008_denom = sum(AST008_denom_AA_QT),
-                              AST008_num = sum(AST008_nume_alt_AA_QT),
-                              AST008_perc = sprintf("%.1f", round((sum(AST008_nume_alt_AA_QT)/sum(AST008_denom_AA_QT))*100,1)),
-                              AST012_denom = sum(AST012_denom_AA_QT),
-                              AST012_num = sum(AST012_nume_AA_QT),
-                              AST012_perc = sprintf("%.1f", round((sum(AST012_nume_AA_QT)/sum(AST012_denom_AA_QT))*100,1)))
+                              AST_REG = sum(AST_REG_AA_BT),
+                              AST_REG_perc = sprintf("%.1f", round((sum(AST_REG_AA_BT)/nrow(dat))*100,1)),
+                              AST007_denom = sum(AST007_denom_AA_BT),
+                              AST007_num = sum(AST007_nume_AA_BT),
+                              AST007_perc = sprintf("%.1f", round((sum(AST007_nume_AA_BT)/sum(AST007_denom_AA_BT))*100,1)),
+                              AST008_denom = sum(AST008_denom_AA_BT),
+                              AST008_num = sum(AST008_nume_alt_AA_BT),
+                              AST008_perc = sprintf("%.1f", round((sum(AST008_nume_alt_AA_BT)/sum(AST008_denom_AA_BT))*100,1)),
+                              AST012_denom = sum(AST012_denom_AA_BT),
+                              AST012_num = sum(AST012_nume_AA_BT),
+                              AST012_perc = sprintf("%.1f", round((sum(AST012_nume_AA_BT)/sum(AST012_denom_AA_BT))*100,1)))
 
 asthma <- bind_rows(asthma_old, asthma_updated)
 
 
 # smoking
 
-smoking_QOF <- dat %>% summarise(situation = "Smoking QOF",
+smoking_QOF <- dat %>% summarise(situation = "Smoking QOF 2026-27",
                               pat_N = n(),
                               SMOK1_REG = sum(SMOK1_REG_current),
                               SMOK1_REG_perc = sprintf("%.1f", round((sum(SMOK1_REG_current)/nrow(dat))*100,1)),
@@ -244,7 +244,7 @@ smoking_QOF <- dat %>% summarise(situation = "Smoking QOF",
 
 # and the updated
 
-smoking_updated <- dat %>% summarise(situation = "Smoking Updated codes",
+smoking_updated <- dat %>% summarise(situation = "Smoking post-review",
                                     pat_N = n(),
                               SMOK1_REG = sum(SMOK1_REG_new),
                               SMOK1_REG_perc = sprintf("%.1f", round((sum(SMOK1_REG_new)/nrow(dat))*100,1)),
@@ -264,7 +264,7 @@ smoking <- bind_rows(smoking_QOF, smoking_updated)
 
 # hypertension
 
-hypertension_QOF <- dat %>% summarise(situation = "Hypertension QOF",
+hypertension_QOF <- dat %>% summarise(situation = "Hypertension QOF 2026-27",
                               pat_N = n(),
                               HYP_REG = sum(HYP_REG_QC_QR),
                               HYP_REG_perc = sprintf("%.1f", round((sum(HYP_REG_QC_QR)/nrow(dat))*100,1)),
@@ -277,7 +277,7 @@ hypertension_QOF <- dat %>% summarise(situation = "Hypertension QOF",
 
 # and do it for UC_VT
 
-hypertension_updated <- dat %>% summarise(situation = "Hypertension Updated (codes and thresholds)",
+hypertension_updated <- dat %>% summarise(situation = "Hypertension post-review",
                                     pat_N = n(),
                               HYP_REG = sum(HYP_REG_UC_VT),
                               HYP_REG_perc = sprintf("%.1f", round((sum(HYP_REG_UC_VT)/nrow(dat))*100,1)),

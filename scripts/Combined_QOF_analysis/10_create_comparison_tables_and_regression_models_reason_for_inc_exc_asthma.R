@@ -225,7 +225,7 @@ nb_model_adj_me <- glmmTMB::glmmTMB(as.formula(paste0("outcome_asthma_attacks ~ 
                          family = glmmTMB::nbinom2(link = "log"),
                          control = glmmTMBControl(parallel = 48))
 Sys.time()
-# saveRDS(nb_model_adj_me, "Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_me_AST007_inc_exc_type_QA_QT.RDS")
+saveRDS(nb_model_adj_me, "Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_me_AST007_inc_exc_type_QA_QT.RDS")
 
 # extract icc
 icc <- performance::icc(nb_model_adj_me)
@@ -255,7 +255,7 @@ coef_table_adj_me <- summary(nb_model_adj_me)$coefficients$cond %>%
 # combine with the skeleton table
 coef_table_adj_me_clean <- left_join(coef_table_skeleton, coef_table_adj_me, by = "term")
 
-coef_table_adj_me_clean <- coef_table_adj_me_clean[ ,c(2, 3, 11)]
+coef_table_adj_me_clean <- coef_table_adj_me_clean[ ,c(1, 2, 3, 11)]
 coef_table_adj_me_clean$IRR_CI[is.na(coef_table_adj_me_clean$IRR_CI)] <- "-"
 
 # paste (reference) next to the term in the term column for the reference categories
@@ -269,67 +269,9 @@ table(dat$age_cat)
 coef_table_adj_me_clean$IRR_CI[coef_table_adj_me_clean$` ` == "Indeterminate"] <- "-"
 
 
-# write this table
-coef_table_adj_me_clean %>%  
-  writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_me_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
-
-#---------------------------------------------#
-# fixed effects adjusted model ---------------#
-#---------------------------------------------#
-
-Sys.time()
-nb_model_adj_fe <- glmmTMB::glmmTMB(as.formula(paste0("outcome_asthma_attacks ~ AST007_inc_exc_type_QA_QT + ", 
-                                                      paste(ind_vars_characteristics, collapse = " + "),
-                                                      " + offset(log(followup_time_pys))")), 
-                                    data = dat,
-                                    family = glmmTMB::nbinom2(link = "log"),
-                                    control = glmmTMBControl(parallel = 48))
-Sys.time()
-saveRDS(nb_model_adj_fe, "Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_fe_AST007_inc_exc_type_QA_QT.RDS")
-
-# extract icc
-icc <- performance::icc(nb_model_adj_fe)
-icc
-
-# very low: 0.02 (unadjusted)
-
-# assess assumptions
-# simulateoutput <- DHARMa::simulateResiduals(nb_model_adj_fe)
-# simulateoutput
-
-coef_table_adj_fe <- summary(nb_model_adj_fe)$coefficients$cond %>%
-  as.data.frame() %>%
-  tibble::rownames_to_column(var = "term") %>%
-  dplyr::rename(estimate = Estimate, std_error = `Std. Error`, z_value = `z value`, p_value = `Pr(>|z|)`) %>%
-  mutate(IRR = exp(estimate),
-         IRR_CI_lower = exp(estimate - 1.96 * std_error),
-         IRR_CI_upper = exp(estimate + 1.96 * std_error)) %>%
-  select(term, estimate, std_error, z_value, p_value, IRR, IRR_CI_lower, IRR_CI_upper) %>% # round
-  mutate(across(c(estimate, std_error, z_value, IRR, IRR_CI_lower, IRR_CI_upper), ~ round(., 2)),
-         p_value = if_else(p_value < 0.001, "<0.001", sprintf("%.3f", round(p_value, 3)))) %>% # combine confidence intervals and estimate into one clean column
-  mutate(IRR_CI = sprintf("%.2f (%.2f - %.2f)", IRR, IRR_CI_lower, IRR_CI_upper)) %>%
-  filter(term != "(Intercept)")
-
-# combine with the skeleton table
-coef_table_adj_fe_clean <- left_join(coef_table_skeleton, coef_table_adj_fe, by = "term")
-
-coef_table_adj_fe_clean <- coef_table_adj_fe_clean[ ,c(2, 3, 11)]
-coef_table_adj_fe_clean$IRR_CI[is.na(coef_table_adj_fe_clean$IRR_CI)] <- "-"
-
-# paste (reference) next to the term in the term column for the reference categories
-coef_table_adj_fe <- coef_table_adj_fe %>%
-  mutate(term = case_when(
-    IRR_CI == "-" ~ paste0(term, " (reference)"),
-    TRUE ~ term
-  ))
-
-table(dat$age_cat)
-coef_table_adj_fe_clean$IRR_CI[coef_table_adj_fe_clean$` ` == "Indeterminate"] <- "-"
-
-
-# write this table
-coef_table_adj_fe_clean %>% 
-  writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_fe_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
+# # write this table
+# coef_table_adj_me_clean %>%  
+#   writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_me_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
 
 
 #---------------------------------------------#
@@ -373,8 +315,9 @@ coef_table_unadj_me <- summary(nb_model_unadj_me)$coefficients$cond %>%
 # combine with the skeleton table
 coef_table_unadj_me_clean <- left_join(coef_table_skeleton_unadj, coef_table_unadj_me, by = "term")
 
-coef_table_unadj_me_clean <- coef_table_unadj_me_clean[ ,c(2, 3, 11)]
-coef_table_unadj_me_clean$IRR_CI[is.na(coef_table_unadj_me_clean$IRR_CI)] <- "-"
+coef_table_unadj_me_clean <- coef_table_unadj_me_clean[ ,c(1, 2, 3, 11)]
+coef_table_unadj_me_clean$IRR_CI[coef_table_unadj_me_clean$` ` == "Included in numerator"] <- "-"
+
 
 # paste (reference) next to the term in the term column for the reference categories
 coef_table_unadj_me <- coef_table_unadj_me %>%
@@ -384,67 +327,135 @@ coef_table_unadj_me <- coef_table_unadj_me %>%
   ))
 
 table(dat$age_cat)
-coef_table_unadj_me_clean$IRR_CI[coef_table_unadj_me_clean$` ` == "Indeterminate"] <- "-"
 
 
-# write this table
-coef_table_unadj_me_clean %>% 
-  writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_unadj_me_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
+# # write this table
+# coef_table_unadj_me_clean %>% 
+#   writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_unadj_me_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
 
-#---------------------------------------------#
-# fixed effects unadjusted model ---------------#
-#---------------------------------------------#
+coef_table_me <- left_join(rename(coef_table_adj_me_clean, `Adjusted IRR` = "IRR_CI"), coef_table_unadj_me_clean[ ,c(1,4)], by = "term")
 
-Sys.time()
-nb_model_unadj_fe <- glmmTMB::glmmTMB(as.formula(paste0("outcome_asthma_attacks ~ AST007_inc_exc_type_QA_QT",
-                                                      " + offset(log(followup_time_pys))")), 
-                                    data = dat,
-                                    family = glmmTMB::nbinom2(link = "log"),
-                                    control = glmmTMBControl(parallel = 48))
-Sys.time()
-saveRDS(nb_model_unadj_fe, "Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_unadj_fe_AST007_inc_exc_type_QA_QT.RDS")
+coef_table_me <- coef_table_me %>% select(-term) %>% rename(`Unadjusted IRR` = "IRR_CI")
 
-# extract icc
-icc <- performance::icc(nb_model_unadj_fe)
-icc
-
-# very low: 0.02 (ununadjusted)
-
-# assess assumptions
-# simulateoutput <- DHARMa::simulateResiduals(nb_model_unadj_fe)
-# simulateoutput
-
-coef_table_unadj_fe <- summary(nb_model_unadj_fe)$coefficients$cond %>%
-  as.data.frame() %>%
-  tibble::rownames_to_column(var = "term") %>%
-  dplyr::rename(estimate = Estimate, std_error = `Std. Error`, z_value = `z value`, p_value = `Pr(>|z|)`) %>%
-  mutate(IRR = exp(estimate),
-         IRR_CI_lower = exp(estimate - 1.96 * std_error),
-         IRR_CI_upper = exp(estimate + 1.96 * std_error)) %>%
-  select(term, estimate, std_error, z_value, p_value, IRR, IRR_CI_lower, IRR_CI_upper) %>% # round
-  mutate(across(c(estimate, std_error, z_value, IRR, IRR_CI_lower, IRR_CI_upper), ~ round(., 2)),
-         p_value = if_else(p_value < 0.001, "<0.001", sprintf("%.3f", round(p_value, 3)))) %>% # combine confidence intervals and estimate into one clean column
-  mutate(IRR_CI = sprintf("%.2f (%.2f - %.2f)", IRR, IRR_CI_lower, IRR_CI_upper)) %>%
-  filter(term != "(Intercept)")
-
-# combine with the skeleton table
-coef_table_unadj_fe_clean <- left_join(coef_table_skeleton_unadj, coef_table_unadj_fe, by = "term")
-
-coef_table_unadj_fe_clean <- coef_table_unadj_fe_clean[ ,c(2, 3, 11)]
-coef_table_unadj_fe_clean$IRR_CI[is.na(coef_table_unadj_fe_clean$IRR_CI)] <- "-"
-
-# paste (reference) next to the term in the term column for the reference categories
-coef_table_unadj_fe <- coef_table_unadj_fe %>%
-  mutate(term = case_when(
-    IRR_CI == "-" ~ paste0(term, " (reference)"),
-    TRUE ~ term
-  ))
-
-table(dat$age_cat)
-coef_table_unadj_fe_clean$IRR_CI[coef_table_unadj_fe_clean$` ` == "Indeterminate"] <- "-"
+writexl::write_xlsx(coef_table_me, "Z:/Group_work/QOF_project/Alex/Output/Asthma/AST007_inc_exc_type_coef_table_adj_unadj.xlsx")
 
 
-# write this table
-coef_table_unadj_fe_clean %>% 
-  writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_unadj_fe_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
+
+
+# #---------------------------------------------#
+# # fixed effects adjusted model ---------------#
+# #---------------------------------------------#
+# 
+# Sys.time()
+# nb_model_adj_fe <- glmmTMB::glmmTMB(as.formula(paste0("outcome_asthma_attacks ~ AST007_inc_exc_type_QA_QT + ", 
+#                                                       paste(ind_vars_characteristics, collapse = " + "),
+#                                                       " + offset(log(followup_time_pys))")), 
+#                                     data = dat,
+#                                     family = glmmTMB::nbinom2(link = "log"),
+#                                     control = glmmTMBControl(parallel = 48))
+# Sys.time()
+# saveRDS(nb_model_adj_fe, "Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_fe_AST007_inc_exc_type_QA_QT.RDS")
+# 
+# # extract icc
+# icc <- performance::icc(nb_model_adj_fe)
+# icc
+# 
+# # very low: 0.02 (unadjusted)
+# 
+# # assess assumptions
+# # simulateoutput <- DHARMa::simulateResiduals(nb_model_adj_fe)
+# # simulateoutput
+# 
+# coef_table_adj_fe <- summary(nb_model_adj_fe)$coefficients$cond %>%
+#   as.data.frame() %>%
+#   tibble::rownames_to_column(var = "term") %>%
+#   dplyr::rename(estimate = Estimate, std_error = `Std. Error`, z_value = `z value`, p_value = `Pr(>|z|)`) %>%
+#   mutate(IRR = exp(estimate),
+#          IRR_CI_lower = exp(estimate - 1.96 * std_error),
+#          IRR_CI_upper = exp(estimate + 1.96 * std_error)) %>%
+#   select(term, estimate, std_error, z_value, p_value, IRR, IRR_CI_lower, IRR_CI_upper) %>% # round
+#   mutate(across(c(estimate, std_error, z_value, IRR, IRR_CI_lower, IRR_CI_upper), ~ round(., 2)),
+#          p_value = if_else(p_value < 0.001, "<0.001", sprintf("%.3f", round(p_value, 3)))) %>% # combine confidence intervals and estimate into one clean column
+#   mutate(IRR_CI = sprintf("%.2f (%.2f - %.2f)", IRR, IRR_CI_lower, IRR_CI_upper)) %>%
+#   filter(term != "(Intercept)")
+# 
+# # combine with the skeleton table
+# coef_table_adj_fe_clean <- left_join(coef_table_skeleton, coef_table_adj_fe, by = "term")
+# 
+# coef_table_adj_fe_clean <- coef_table_adj_fe_clean[ ,c(2, 3, 11)]
+# coef_table_adj_fe_clean$IRR_CI[is.na(coef_table_adj_fe_clean$IRR_CI)] <- "-"
+# 
+# # paste (reference) next to the term in the term column for the reference categories
+# coef_table_adj_fe <- coef_table_adj_fe %>%
+#   mutate(term = case_when(
+#     IRR_CI == "-" ~ paste0(term, " (reference)"),
+#     TRUE ~ term
+#   ))
+# 
+# table(dat$age_cat)
+# coef_table_adj_fe_clean$IRR_CI[coef_table_adj_fe_clean$` ` == "Indeterminate"] <- "-"
+# 
+# 
+# # write this table
+# coef_table_adj_fe_clean %>% 
+#   writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_adj_fe_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
+# 
+# 
+# 
+# #---------------------------------------------#
+# # fixed effects unadjusted model ---------------#
+# #---------------------------------------------#
+# 
+# Sys.time()
+# nb_model_unadj_fe <- glmmTMB::glmmTMB(as.formula(paste0("outcome_asthma_attacks ~ AST007_inc_exc_type_QA_QT",
+#                                                       " + offset(log(followup_time_pys))")), 
+#                                     data = dat,
+#                                     family = glmmTMB::nbinom2(link = "log"),
+#                                     control = glmmTMBControl(parallel = 48))
+# Sys.time()
+# saveRDS(nb_model_unadj_fe, "Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_unadj_fe_AST007_inc_exc_type_QA_QT.RDS")
+# 
+# # extract icc
+# icc <- performance::icc(nb_model_unadj_fe)
+# icc
+# 
+# # very low: 0.02 (ununadjusted)
+# 
+# # assess assumptions
+# # simulateoutput <- DHARMa::simulateResiduals(nb_model_unadj_fe)
+# # simulateoutput
+# 
+# coef_table_unadj_fe <- summary(nb_model_unadj_fe)$coefficients$cond %>%
+#   as.data.frame() %>%
+#   tibble::rownames_to_column(var = "term") %>%
+#   dplyr::rename(estimate = Estimate, std_error = `Std. Error`, z_value = `z value`, p_value = `Pr(>|z|)`) %>%
+#   mutate(IRR = exp(estimate),
+#          IRR_CI_lower = exp(estimate - 1.96 * std_error),
+#          IRR_CI_upper = exp(estimate + 1.96 * std_error)) %>%
+#   select(term, estimate, std_error, z_value, p_value, IRR, IRR_CI_lower, IRR_CI_upper) %>% # round
+#   mutate(across(c(estimate, std_error, z_value, IRR, IRR_CI_lower, IRR_CI_upper), ~ round(., 2)),
+#          p_value = if_else(p_value < 0.001, "<0.001", sprintf("%.3f", round(p_value, 3)))) %>% # combine confidence intervals and estimate into one clean column
+#   mutate(IRR_CI = sprintf("%.2f (%.2f - %.2f)", IRR, IRR_CI_lower, IRR_CI_upper)) %>%
+#   filter(term != "(Intercept)")
+# 
+# # combine with the skeleton table
+# coef_table_unadj_fe_clean <- left_join(coef_table_skeleton_unadj, coef_table_unadj_fe, by = "term")
+# 
+# coef_table_unadj_fe_clean <- coef_table_unadj_fe_clean[ ,c(2, 3, 11)]
+# coef_table_unadj_fe_clean$IRR_CI[is.na(coef_table_unadj_fe_clean$IRR_CI)] <- "-"
+# 
+# # paste (reference) next to the term in the term column for the reference categories
+# coef_table_unadj_fe <- coef_table_unadj_fe %>%
+#   mutate(term = case_when(
+#     IRR_CI == "-" ~ paste0(term, " (reference)"),
+#     TRUE ~ term
+#   ))
+# 
+# table(dat$age_cat)
+# coef_table_unadj_fe_clean$IRR_CI[coef_table_unadj_fe_clean$` ` == "Indeterminate"] <- "-"
+# 
+# 
+# # write this table
+# coef_table_unadj_fe_clean %>% 
+#   writexl::write_xlsx("Z:/Group_work/QOF_project/Alex/Output/Asthma/nb_model_unadj_fe_AST007_inc_exc_type_QA_QT_coef_table.xlsx")
 
