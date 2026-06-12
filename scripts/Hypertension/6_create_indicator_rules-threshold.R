@@ -60,6 +60,7 @@ dat <- dat %>% mutate(HYP_REG_RN1 = if_else(!is.na(HYPLAT_DAT) & is.na(HYPRES_DA
                       HYP_REG = HYP_REG_RN1) # only one rule for the hypertension register
 
 table(dat$HYP_REG)                      
+table(dat$HYP_REG, dat$amb_type)                      
 
 #------------------- HYP008
 
@@ -71,7 +72,10 @@ dat <- dat %>%
                                        HOMEAMBBPDIALAT_VAL <= 85) |
                                       (amb_type=="24hr" &
                                          HOMEAMBBPSYSLAT_VAL <= 130 & 
-                                         HOMEAMBBPDIALAT_VAL <= 80)) &
+                                         HOMEAMBBPDIALAT_VAL <= 80)|
+                                       (amb_type=="Night" &
+                                          HOMEAMBBPSYSLAT_VAL <= 120 & 
+                                          HOMEAMBBPDIALAT_VAL <= 70)) &
                                       HOMEAMBBPLAT_DAT >= QSSD &
                                       CLHMAMBBPLAT_DAT == HOMEAMBBPLAT_DAT, 1, 0, missing = 0), # 1 = S, 0 = N
          HYP008_denom_RN3 = if_else(CLINBPSYSLAT_VAL <= 140 &
@@ -92,7 +96,8 @@ dat <- dat %>%
          HYP008_denom_RN8_SS2 = if_else(# subsection 2 for rule 8
                                           HOMEAMBBPLAT_DAT >= QSSD &   
                                           ((amb_type=="Day/Home" & (HOMEAMBBPSYSLAT_VAL > 135 | HOMEAMBBPDIALAT_VAL > 85)) |
-                                          (amb_type=="24hr" & (HOMEAMBBPSYSLAT_VAL > 130 | HOMEAMBBPDIALAT_VAL > 80))) &
+                                          (amb_type=="24hr" & (HOMEAMBBPSYSLAT_VAL > 130 | HOMEAMBBPDIALAT_VAL > 80))|
+                                            (amb_type=="Night" & (HOMEAMBBPSYSLAT_VAL > 120 | HOMEAMBBPDIALAT_VAL > 70))) &
                                           CLHMAMBBPLAT_DAT == HOMEAMBBPLAT_DAT &
                                           HYPINVITE1_DAT > HOMEAMBBPLAT_DAT & 
                                           !is.na(HYPINVITE2_DAT), 1, 0, missing = 0), # 1/0 = meets/doesn't meet SS2 criteria
@@ -147,7 +152,9 @@ dat <- dat %>%
          HYP009_denom_RN2 = if_else(((amb_type=="Day/home" & HOMEAMBBPSYSLAT_VAL <= 145 &
                                       HOMEAMBBPDIALAT_VAL <= 85)
                                      |(amb_type=="24hr" & HOMEAMBBPSYSLAT_VAL <= 140 &
-                                         HOMEAMBBPDIALAT_VAL <= 80)) &
+                                         HOMEAMBBPDIALAT_VAL <= 80)
+                                     |(amb_type=="Night" & HOMEAMBBPSYSLAT_VAL <= 130 &
+                                         HOMEAMBBPDIALAT_VAL <= 70)) &
                                       HOMEAMBBPLAT_DAT >= QSSD &
                                       CLHMAMBBPLAT_DAT == HOMEAMBBPLAT_DAT, 1, 0, missing = 0), # 1 = S, 0 = N
          HYP009_denom_RN3 = if_else(CLINBPSYSLAT_VAL <= 150 &
@@ -166,7 +173,8 @@ dat <- dat %>%
                                           !is.na(HYPINVITE2_DAT), 1, 0, missing = 0), # 1/0 = meets/doesn't meet SS1 criteria
          HYP009_denom_RN8_SS2 = if_else(HOMEAMBBPLAT_DAT >= QSSD &   # subsection 2 for rule 8
                                           ((amb_type=="Day/home" & (HOMEAMBBPSYSLAT_VAL > 145 | HOMEAMBBPDIALAT_VAL > 85)) 
-                                        |(amb_type=="24hr" & (HOMEAMBBPSYSLAT_VAL > 140 | HOMEAMBBPDIALAT_VAL > 80)))&
+                                        |(amb_type=="24hr" & (HOMEAMBBPSYSLAT_VAL > 140 | HOMEAMBBPDIALAT_VAL > 80))
+                                        |(amb_type=="Night" & (HOMEAMBBPSYSLAT_VAL > 130 | HOMEAMBBPDIALAT_VAL > 70)))&
                                           CLHMAMBBPLAT_DAT == HOMEAMBBPLAT_DAT &
                                           HYPINVITE1_DAT > HOMEAMBBPLAT_DAT & 
                                           !is.na(HYPINVITE2_DAT), 1, 0, missing = 0), # 1/0 = meets/doesn't meet SS2 criteria
