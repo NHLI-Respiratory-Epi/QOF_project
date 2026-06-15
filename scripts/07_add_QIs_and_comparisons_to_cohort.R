@@ -227,6 +227,45 @@ hyp <- hyp1 %>% full_join(., hyp2, by = c("patid")) %>%
 dat <- full_join(dat, hyp, by = "patid")
 
 
+# add in rule comparison variable
+
+make_comparison <- function(dat, comparison_vars, comp1, comp2) {
+  
+  for (v in comparison_vars) {
+    
+    var1 <- paste0(v, "_", comp1)
+    var2 <- paste0(v, "_", comp2)
+    
+    new_var <- paste0(v, "_", comp1, "_vs_", comp2, "_comparison")
+    
+    dat <- dat %>%
+      mutate(
+        !!new_var := case_when(
+          is.na(.data[[var1]]) & is.na(.data[[var2]]) ~ NA_integer_,
+          .data[[var1]] == 0 & .data[[var2]] == 0 ~ 0,
+          .data[[var1]] == 1 & .data[[var2]] == 0 ~ 1,
+          .data[[var1]] == 0 & .data[[var2]] == 1 ~ 2,
+          .data[[var1]] == 1 & .data[[var2]] == 1 ~ 3
+        )
+      )
+  }
+  
+  return(dat)
+}
+
+# 0 = not in either
+# 1 = in first comparison only
+# 2 = in second comparison only
+# 3 = in both
+
+colnames(dat)
+comp_vars_hypertension <- c("HYP_REG",
+                            "HYP008_denom", "HYP008_nume",
+                            "HYP009_denom", "HYP009_nume")
+
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "UC_VT")
+
+
 # smoking (prelim)
 
 # smoking <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_with_rules.RDS")
@@ -236,6 +275,31 @@ smoking <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/8_cohort_smoki
 
 dat <- full_join(dat, smoking, by = "patid")
 # we can label the current QOF register and indicator variables
+
+
+
+
+
+# the variables to compare
+comp_vars_smoking <- c("SMOK002_denominator", "SMOK002_numerator",
+                       "SMOK004_denominator", "SMOK004_numerator",
+                       "SMOK005_denominator", "SMOK005_numerator")
+
+# all comparisons with QA_QT
+dat <- make_comparison(dat, comp_vars_smoking, "current", "new")
+
+table(dat$SMOK002_denominator_current_vs_new_comparison)
+table(dat$SMOK004_denominator_current_vs_new_comparison)
+table(dat$SMOK005_denominator_current_vs_new_comparison)
+
+# "SMOK1_REG_current"                     
+# [253] "SMOK2_REG_current"                      "SMOK002_numerator_current"              "SMOK002_denominator_current"           
+# [256] "SMOK002_inc_exc_type_current"           "SMOK004_numerator_current"              "SMOK004_denominator_current"           
+# [259] "SMOK004_inc_exc_type_current"           "SMOK005_numerator_current"              "SMOK005_denominator_current"           
+# [262] "SMOK005_inc_exc_type_current"           "SMOK1_REG_new"                          "SMOK2_REG_new"                         
+# [265] "SMOK002_numerator_new"                  "SMOK002_denominator_new"                "SMOK004_numerator_new"                 
+# [268] "SMOK004_denominator_new"                "SMOK005_numerator_new"                  "SMOK005_denominator_new"    
+
 
 
 # Asthma QIs
