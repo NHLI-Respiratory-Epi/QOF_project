@@ -263,6 +263,10 @@ comp_vars_hypertension <- c("HYP_REG",
                             "HYP008_denom", "HYP008_nume",
                             "HYP009_denom", "HYP009_nume")
 
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "QC_NN")
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "QC_VT")
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "UC_QR")
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "UC_NN")
 dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "UC_VT")
 
 
