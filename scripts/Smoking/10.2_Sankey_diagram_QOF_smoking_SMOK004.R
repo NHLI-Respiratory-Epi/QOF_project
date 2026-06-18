@@ -122,13 +122,14 @@ SMOK2_REG_N == sum(SMOK004_denom_RN1_N,
 # these are the cleaner names, with their group (divided into 4 options: 
 #          register,  excluded, selected numerator, selected denominator
 
-nodes <- data.frame("name" = c("Smoking \nregister ", "Rejected rule 1: Did not have 'current smoker' status",
-                               "Selected rule 2: Had referral for smoking cessation service/advisor or pharmacotherapy",
-                               "Rejected rule 3: Unsuitable for QI care",
-                               "Rejected rule 4: Declined QI care",
-                               "Rejected rule 5: Did not respond to smoking care review invitations",
-                               "Rejected rule 6: Registered at practice <3 months",
-                               "Selected rule 6: Remainder in denominator"),
+nodes <- data.frame("name" = c("Smoking \nregister 2 \n(n = 2259003) ", 
+                               "Rejected rule 1: Did not have 'current smoker' status (n = 1936191)",
+                               "Selected rule 2: Received smoking cessation eduction/referral/pharmacotherapy <24 months (n = 297157)",
+                               "Rejected rule 3: Unsuitable for QI care (n = 156)",
+                               "Rejected rule 4: Declined QI care (n = 23)",
+                               "Rejected rule 5: Invited for monitoring (n = 424)",
+                               "Rejected rule 6: Registered at practice <3 months (n = 1808)",
+                               "Selected rule 6: Remainder in denominator (n = 23244)"),
                     "group" = c("register", "excluded", "selected_numerator", "excluded",
                                 "excluded", "excluded", "excluded", "selected_denominator"))
 

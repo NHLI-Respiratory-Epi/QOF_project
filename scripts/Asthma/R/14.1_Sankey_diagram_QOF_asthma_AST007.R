@@ -136,14 +136,15 @@ AST_REG_N == sum(AST007_denom_RN1_N,
 # these are the cleaner names, with their group (divided into 4 options: 
 #          register,  excluded, selected numerator, selected denominator
 
-nodes <- data.frame("name" = c("Asthma \nregister ", "Selected rule 1: Asthma review with plan and record of exacerbations",
-                               "Rejected rule 2: Unsuitable for QI care",
-                               "Rejected rule 3: Declined asthma monitoring care",
-                               "Rejected rule 4: Declined QI care",
-                               "Rejected rule 5: Invited for monitoring",
-                               "Rejected rule 6: Newly diagnosed asthma <3 months",
-                               "Rejected rule 7: Registered at practice <3 months",
-                               "Selected rule 7: Remainder in denominator"),
+nodes <- data.frame("name" = c("Asthma \nregister \n(n = 156404) ", 
+                               "Selected rule 1: Asthma review with plan and record of exacerbations (n = 98958)",
+                               "Rejected rule 2: Unsuitable for QI care (n = 479)",
+                               "Rejected rule 3: Declined asthma monitoring care (n = 229)",
+                               "Rejected rule 4: Declined QI care (n = 2147)",
+                               "Rejected rule 5: Invited for monitoring (n = 30695)",
+                               "Rejected rule 6: Newly diagnosed asthma <3 months (n = 827)",
+                               "Rejected rule 7: Registered at practice <3 months (n = 591)",
+                               "Selected rule 7: Remainder in denominator (n = 22478)"),
                     "group" = c("register", "selected_numerator", "excluded",
                                 "excluded", "excluded", "excluded", "excluded", "excluded",
                                 "selected_denominator"))
