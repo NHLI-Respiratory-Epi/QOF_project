@@ -385,42 +385,42 @@ AST_QA_BT <- full_join(AST007_QA_BT, AST008_QA_BT,
                        by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST012_QA_BT, by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST_QA_QT_diff, by = "pracid") %>%
-  mutate(AST007_diff = reimbursement_AST007_QA_QT - reimbursement_AST007,
-         AST008_diff = reimbursement_AST008_QA_QT - reimbursement_AST008,
-         AST012_diff = reimbursement_AST012_QA_QT - reimbursement_AST012)
+  mutate(AST007_diff = reimbursement_AST007 - reimbursement_AST007_QA_QT,
+         AST008_diff = reimbursement_AST008 - reimbursement_AST008_QA_QT,
+         AST012_diff = reimbursement_AST012 - reimbursement_AST012_QA_QT)
          
 AST_QA_IT <- full_join(AST007_QA_IT, AST008_QA_IT,
                        by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST012_QA_IT, by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST_QA_QT_diff, by = "pracid") %>%
-  mutate(AST007_diff = reimbursement_AST007_QA_QT - reimbursement_AST007,
-         AST008_diff = reimbursement_AST008_QA_QT - reimbursement_AST008,
-         AST012_diff = reimbursement_AST012_QA_QT - reimbursement_AST012)
+  mutate(AST007_diff = reimbursement_AST007 - reimbursement_AST007_QA_QT,
+         AST008_diff = reimbursement_AST008 - reimbursement_AST008_QA_QT,
+         AST012_diff = reimbursement_AST012 - reimbursement_AST012_QA_QT)
 
 
 AST_AA_QT <- full_join(AST007_AA_QT, AST008_AA_QT,
                        by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST012_AA_QT, by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST_QA_QT_diff, by = "pracid") %>%
-  mutate(AST007_diff = reimbursement_AST007_QA_QT - reimbursement_AST007,
-         AST008_diff = reimbursement_AST008_QA_QT - reimbursement_AST008,
-         AST012_diff = reimbursement_AST012_QA_QT - reimbursement_AST012)
+  mutate(AST007_diff = reimbursement_AST007 - reimbursement_AST007_QA_QT,
+         AST008_diff = reimbursement_AST008 - reimbursement_AST008_QA_QT,
+         AST012_diff = reimbursement_AST012 - reimbursement_AST012_QA_QT)
 
 AST_AA_BT <- full_join(AST007_AA_BT, AST008_AA_BT,
                        by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST012_AA_BT, by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST_QA_QT_diff, by = "pracid") %>%
-  mutate(AST007_diff = reimbursement_AST007_QA_QT - reimbursement_AST007,
-         AST008_diff = reimbursement_AST008_QA_QT - reimbursement_AST008,
-         AST012_diff = reimbursement_AST012_QA_QT - reimbursement_AST012)
+  mutate(AST007_diff = reimbursement_AST007 - reimbursement_AST007_QA_QT,
+         AST008_diff = reimbursement_AST008 - reimbursement_AST008_QA_QT,
+         AST012_diff = reimbursement_AST012 - reimbursement_AST012_QA_QT)
 
 AST_AA_IT <- full_join(AST007_AA_IT, AST008_AA_IT,
                        by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST012_AA_IT, by = c("pracid", "n", "AST_REG", "scenario"))  %>%
   full_join(., AST_QA_QT_diff, by = "pracid") %>%
-  mutate(AST007_diff = reimbursement_AST007_QA_QT - reimbursement_AST007,
-         AST008_diff = reimbursement_AST008_QA_QT - reimbursement_AST008,
-         AST012_diff = reimbursement_AST012_QA_QT - reimbursement_AST012)
+  mutate(AST007_diff = reimbursement_AST007 - reimbursement_AST007_QA_QT,
+         AST008_diff = reimbursement_AST008 - reimbursement_AST008_QA_QT,
+         AST012_diff = reimbursement_AST012 - reimbursement_AST012_QA_QT)
 
 AST <- bind_rows(AST_QA_QT, AST_QA_BT, AST_QA_IT,
                  AST_AA_QT, AST_AA_BT, AST_AA_IT)
@@ -461,38 +461,38 @@ COPD_QC_diff <- COPD_QC %>% select(pracid,
 COPD_VC <- full_join(COPD010_VC, COPD014_VC,
                        by = c("pracid", "n", "COPD_REG", "scenario"))  %>%
   full_join(., COPD_QC_diff, by = "pracid") %>%
-  mutate(COPD010_diff = reimbursement_COPD010_QC - reimbursement_COPD010,
-         COPD014_diff = reimbursement_COPD014_QC - reimbursement_COPD014)
+  mutate(COPD010_diff = reimbursement_COPD010 - reimbursement_COPD010_QC,
+         COPD014_diff = reimbursement_COPD014 - reimbursement_COPD014_QC)
 
 COPD_VC_VP <- full_join(COPD010_VC_VP, COPD014_VC_VP,
                      by = c("pracid", "n", "COPD_REG", "scenario"))  %>%
   full_join(., COPD_QC_diff, by = "pracid") %>%
-  mutate(COPD010_diff = reimbursement_COPD010_QC - reimbursement_COPD010,
-         COPD014_diff = reimbursement_COPD014_QC - reimbursement_COPD014)
+  mutate(COPD010_diff = reimbursement_COPD010 - reimbursement_COPD010_QC,
+         COPD014_diff = reimbursement_COPD014 - reimbursement_COPD014_QC)
 
 COPD_VC_RP <- full_join(COPD010_VC_RP, COPD014_VC_RP,
                      by = c("pracid", "n", "COPD_REG", "scenario"))  %>%
   full_join(., COPD_QC_diff, by = "pracid") %>%
-  mutate(COPD010_diff = reimbursement_COPD010_QC - reimbursement_COPD010,
-         COPD014_diff = reimbursement_COPD014_QC - reimbursement_COPD014)
+  mutate(COPD010_diff = reimbursement_COPD010 - reimbursement_COPD010_QC,
+         COPD014_diff = reimbursement_COPD014 - reimbursement_COPD014_QC)
 
 COPD_UC <- full_join(COPD010_UC, COPD014_UC,
                      by = c("pracid", "n", "COPD_REG", "scenario"))  %>%
   full_join(., COPD_QC_diff, by = "pracid") %>%
-  mutate(COPD010_diff = reimbursement_COPD010_QC - reimbursement_COPD010,
-         COPD014_diff = reimbursement_COPD014_QC - reimbursement_COPD014)
+  mutate(COPD010_diff = reimbursement_COPD010 - reimbursement_COPD010_QC,
+         COPD014_diff = reimbursement_COPD014 - reimbursement_COPD014_QC)
 
 COPD_UC_VP <- full_join(COPD010_UC_VP, COPD014_UC_VP,
                      by = c("pracid", "n", "COPD_REG", "scenario"))  %>%
   full_join(., COPD_QC_diff, by = "pracid") %>%
-  mutate(COPD010_diff = reimbursement_COPD010_QC - reimbursement_COPD010,
-         COPD014_diff = reimbursement_COPD014_QC - reimbursement_COPD014)
+  mutate(COPD010_diff = reimbursement_COPD010 - reimbursement_COPD010_QC,
+         COPD014_diff = reimbursement_COPD014 - reimbursement_COPD014_QC)
 
 COPD_UC_RP <- full_join(COPD010_UC_RP, COPD014_UC_RP,
                      by = c("pracid", "n", "COPD_REG", "scenario"))  %>%
   full_join(., COPD_QC_diff, by = "pracid") %>%
-  mutate(COPD010_diff = reimbursement_COPD010_QC - reimbursement_COPD010,
-         COPD014_diff = reimbursement_COPD014_QC - reimbursement_COPD014)
+  mutate(COPD010_diff = reimbursement_COPD010 - reimbursement_COPD010_QC,
+         COPD014_diff = reimbursement_COPD014 - reimbursement_COPD014_QC)
 
 COPD <- bind_rows(COPD_QC, COPD_VC, COPD_VC_VP, COPD_VC_RP,
                   COPD_UC, COPD_UC_VP, COPD_UC_RP)
@@ -531,9 +531,9 @@ SMOK_new <- full_join(SMOK002_new, SMOK004_new,
                        by = c("pracid", "n", "scenario"))  %>%
   full_join(., SMOK005_new, by = c("pracid", "n", "SMOK1_REG", "scenario"))  %>%
   full_join(., SMOK_current_diff, by = "pracid") %>%
-  mutate(SMOK002_diff = reimbursement_SMOK002_current - reimbursement_SMOK002,
-         SMOK004_diff = reimbursement_SMOK004_current - reimbursement_SMOK004,
-         SMOK005_diff = reimbursement_SMOK005_current - reimbursement_SMOK005)
+  mutate(SMOK002_diff = reimbursement_SMOK002 - reimbursement_SMOK002_current,
+         SMOK004_diff = reimbursement_SMOK004 - reimbursement_SMOK004_current,
+         SMOK005_diff = reimbursement_SMOK005 - reimbursement_SMOK005_current)
 
 
 SMOK <- bind_rows(SMOK_current, SMOK_new)
@@ -567,32 +567,32 @@ HYP_QC_QR_diff <- HYP_QC_QR %>% select(pracid,
 HYP_QC_NN <- full_join(HYP008_QC_NN, HYP009_QC_NN,
                      by = c("pracid", "n", "HYP_REG", "scenario"))  %>%
   full_join(., HYP_QC_QR_diff, by = "pracid") %>%
-  mutate(HYP008_diff = reimbursement_HYP008_QC_QR - reimbursement_HYP008,
-         HYP009_diff = reimbursement_HYP009_QC_QR - reimbursement_HYP009)
+  mutate(HYP008_diff = reimbursement_HYP008 - reimbursement_HYP008_QC_QR,
+         HYP009_diff = reimbursement_HYP009 - reimbursement_HYP009_QC_QR)
 
 HYP_QC_VT <- full_join(HYP008_QC_VT, HYP009_QC_VT,
                        by = c("pracid", "n", "HYP_REG", "scenario"))  %>%
   full_join(., HYP_QC_QR_diff, by = "pracid") %>%
-  mutate(HYP008_diff = reimbursement_HYP008_QC_QR - reimbursement_HYP008,
-         HYP009_diff = reimbursement_HYP009_QC_QR - reimbursement_HYP009)
+  mutate(HYP008_diff = reimbursement_HYP008 - reimbursement_HYP008_QC_QR,
+         HYP009_diff = reimbursement_HYP009 - reimbursement_HYP009_QC_QR)
 
 HYP_UC_QR <- full_join(HYP008_UC_QR, HYP009_UC_QR,
                        by = c("pracid", "n", "HYP_REG", "scenario"))  %>%
   full_join(., HYP_QC_QR_diff, by = "pracid") %>%
-  mutate(HYP008_diff = reimbursement_HYP008_QC_QR - reimbursement_HYP008,
-         HYP009_diff = reimbursement_HYP009_QC_QR - reimbursement_HYP009)
+  mutate(HYP008_diff = reimbursement_HYP008 - reimbursement_HYP008_QC_QR,
+         HYP009_diff = reimbursement_HYP009 - reimbursement_HYP009_QC_QR)
 
 HYP_UC_NN <- full_join(HYP008_UC_NN, HYP009_UC_NN,
                        by = c("pracid", "n", "HYP_REG", "scenario"))  %>%
   full_join(., HYP_QC_QR_diff, by = "pracid") %>%
-  mutate(HYP008_diff = reimbursement_HYP008_QC_QR - reimbursement_HYP008,
-         HYP009_diff = reimbursement_HYP009_QC_QR - reimbursement_HYP009)
+  mutate(HYP008_diff = reimbursement_HYP008 - reimbursement_HYP008_QC_QR,
+         HYP009_diff = reimbursement_HYP009 - reimbursement_HYP009_QC_QR)
 
 HYP_UC_VT <- full_join(HYP008_UC_VT, HYP009_UC_VT,
                        by = c("pracid", "n", "HYP_REG", "scenario"))  %>%
   full_join(., HYP_QC_QR_diff, by = "pracid") %>%
-  mutate(HYP008_diff = reimbursement_HYP008_QC_QR - reimbursement_HYP008,
-         HYP009_diff = reimbursement_HYP009_QC_QR - reimbursement_HYP009)
+  mutate(HYP008_diff = reimbursement_HYP008 - reimbursement_HYP008_QC_QR,
+         HYP009_diff = reimbursement_HYP009 - reimbursement_HYP009_QC_QR)
 
 HYP <- bind_rows(HYP_QC_QR, HYP_QC_NN, HYP_QC_VT,
                  HYP_UC_QR, HYP_UC_NN, HYP_UC_VT)
