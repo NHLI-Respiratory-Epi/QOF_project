@@ -57,13 +57,14 @@ clusterEvalQ(cl, { # these need to be read into each cluster
 # these R objects are necessary in each cluster
 clusterExport(cl, varlist = c("dat", "run_multi_mcnemar"), envir = environment())
 
-# COPD
-COPD_REG_comp_list <- dat %>% select(starts_with("COPD_REG")) %>% 
-  select(-contains("comparison")) %>% select(-COPD_REG_QC) %>% colnames()
+# # COPD
+# COPD_REG_comp_list <- dat %>% select(starts_with("COPD_REG")) %>% 
+#   select(-contains("comparison")) %>% select(-COPD_REG_QC) %>% colnames()
+# 
+# big_COPD <- parLapply(cl, COPD_REG_comp_list, function(x) {
+#   run_multi_mcnemar(x, scenario_baseline = "COPD_REG_QC", dat = dat)
+# })
 
-big_COPD <- parLapply(cl, COPD_REG_comp_list, function(x) {
-  run_multi_mcnemar(x, scenario_baseline = "COPD_REG_QC", dat = dat)
-})
 
 # Asthma
 AST_REG_comp_list <- dat %>% select(starts_with("AST_REG")) %>% 
@@ -77,7 +78,7 @@ big_AST <- parLapply(cl, AST_REG_comp_list, function(x) {
 # Hypertension
 
 HYP_REG_comp_list <- dat %>% select(starts_with("HYP_REG")) %>% 
-  select(-contains("comparison")) %>% select(-HYP_REG_QC_QR) %>% colnames()
+  select(-contains("comparison")) %>% select(HYP_REG_UC_QR) %>% colnames()
 
 big_HYP <- parLapply(cl, HYP_REG_comp_list, function(x) {
   run_multi_mcnemar(x, scenario_baseline = "HYP_REG_QC_QR", dat = dat)
