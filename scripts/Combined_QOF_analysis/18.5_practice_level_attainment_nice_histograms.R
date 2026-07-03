@@ -622,4 +622,86 @@ AST %>% filter(scenario == "AA_IT") %>% pull(AST007_diff) %>% hist()
 
 # create the data frame we need.
 
-diffs <- data.frame()
+# diffs <- data.frame(AST007_AA_BT = AST$AST007_diff[AST$scenario == "AA_BT"],
+#                     COPD010_VC_VP = COPD$COPD010_diff[COPD$scenario == "VC_VP"], 
+#                     COPD010_UC = COPD$COPD010_diff[COPD$scenario == "UC"],
+#                     SMOK002_new = SMOK$SMOK002_diff[SMOK$scenario == "new"],
+#                     HYP008_UC_VT = HYP$HYP008_diff[HYP$scenario == "UC_VT"],
+#                     HYP009_UC_VT = HYP$HYP009_diff[HYP$scenario == "UC_VT"])
+
+diffs <- data.frame(COPD_VC_VP = COPD$COPD010_diff[COPD$scenario == "VC_VP"], 
+                    COPD_UC = COPD$COPD010_diff[COPD$scenario == "UC"],
+#       SMOK_new = (SMOK$SMOK002_diff[SMOK$scenario == "new"] + SMOK$SMOK004_diff[SMOK$scenario == "new"]), # minimal effect for smoking so removed
+                    AST_AA_BT = (AST$AST007_diff[AST$scenario == "AA_BT"] + AST$AST012_diff[AST$scenario == "AA_BT"]),
+                    HYP_UC_VT = (HYP$HYP008_diff[HYP$scenario == "UC_VT"] + HYP$HYP009_diff[HYP$scenario == "UC_VT"]))
+                    
+cost_cols <- colnames(diffs)
+summary(diffs)                    
+
+cost_cats <- tibble(cost_variable = cost_cols,
+                    category = factor(c("COPD", "COPD", "Asthma", "Hypertension"),
+                                     levels = c("COPD", "Asthma", "Hypertension")))
+
+df_long <- diffs %>% pivot_longer(cols = all_of(cost_cols),
+                       names_to = "cost_variable",
+                       values_to = "cost_difference") %>%
+  left_join(cost_cats, by = "cost_variable") %>%
+  mutate(cost_variable = factor(cost_variable, levels = c("COPD_VC_VP", "COPD_UC", 
+                                                          "AST_AA_BT", "HYP_UC_VT")))
+
+
+df_long$cost_variable_clean <- NA
+df_long$cost_variable_clean[df_long$cost_variable == "COPD_VC_VP"] <- "COPD QOF 2026-27"
+df_long$cost_variable_clean[df_long$cost_variable == "COPD_UC"] <- "COPD post-review"
+df_long$cost_variable_clean[df_long$cost_variable == "AST_AA_BT"] <- "Asthma post-review"
+df_long$cost_variable_clean[df_long$cost_variable == "HYP_UC_VT"] <- "Hypertension post-review"
+df_long$cost_variable_clean <- factor(df_long$cost_variable_clean, 
+                                      levels = c("COPD QOF 2026-27", "COPD post-review",
+                                                 "Asthma post-review", "Hypertension post-review")) 
+
+# ggplot(df_long, aes(x = cost_difference, fill = category)) +
+#   geom_histogram(
+#     bins = 50,
+#     colour = "white",
+#     alpha = 0.7,
+#     position = "identity",
+#     na.rm = TRUE) +
+#   geom_vline(xintercept = 0,
+#              linetype = "dashed",
+#              linewidth = 0.6) +
+#   facet_wrap(~ cost_variable_clean, scale = "fixed") +
+#   scale_x_continuous(breaks = seq(-3500, 3500, by = 500)) +
+#   labs(title = "Difference in reimbursement costs across practices and QOF areas and scenarios",
+#        x = "Difference in reimbursement (£) between scenario and QOF 2025-26 rules",
+#        y = "Number of practices",
+#        fill = "QOF area") +
+#   theme_bw() +
+#   theme(panel.grid.minor = element_blank())
+
+
+summary(diffs)
+
+p <- ggplot(df_long, aes(x = cost_difference)) +
+  geom_histogram(
+    bins = 50,
+    colour = "black",
+    fill = "white",
+    alpha = 0.7,
+    position = "identity",
+    na.rm = TRUE) +
+  geom_vline(xintercept = 0,
+             linetype = "dashed",
+             linewidth = 0.4) +
+  facet_wrap(~ cost_variable_clean, scale = "fixed") +
+  # scale_x_continuous(limits = c(-3500, 3500),
+  #                    breaks = seq(-3000, 3000, by = 1000),
+  #                    minor_breaks = seq(-3500, 3500, by = 500)) +
+  scale_x_continuous(breaks = seq(-3000, 3000, by = 1000)) + 
+  labs(title = "Histograms showing difference in reimbursement costs across practices by QOF area and scenario",
+       x = "Difference in reimbursement (£) between scenario and QOF 2025-26 rules",
+       y = "Number of practices") +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank())
+
+ggsave("X:/QOF_project/Alex/Output/output/reimbursement histograms.jpeg", height = 8, width = 12)
+# ggsave("X:/QOF_project/Alex/Output/output/reimbursement histograms.jpeg", height = 705, width = 1057, units = "px", dpi = 300)
