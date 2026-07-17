@@ -96,11 +96,12 @@ GMS == sum(AST_REG_RN1_ASTLAT_N,
 # these are the cleaner names, with their group (divided into 4 options: 
 #          register,  excluded, selected numerator, selected denominator
 
-nodes <- data.frame("name" = c("GMS", "Rejected rule 1.1: No asthma diagnosis",
-                                "Rejected rule 1.2: Asthma diagnosis without drug treatment in past 12 months",
-                                "Rejected rule 2: Asthma resolved",
-                               "Rejected rule 3: <6 years of age", 
-                                "Selected into register rule 3: >= 6 years of age"),
+nodes <- data.frame("name" = c("GMS (n = 2750220)", 
+                               "Rejected rule 1.1: No asthma diagnosis (n = 2430937)",
+                               "Rejected rule 1.2: No drug treatment in past 12 months (n = 155909)",
+                               "Rejected rule 2: Asthma resolved (n = 5515)",
+                               "Rejected rule 3: <6 years of age (n = 1455)", 
+                                "Selected into register rule 3: >= 6 years of age (n = 156404)"),
                     "group" = c("GMS", "excluded", "excluded", "excluded", "excluded", 
                                 "register"))
 

@@ -181,7 +181,7 @@ colnames(dat)
 hyp1 <- readRDS("Z:/Group_work/QOF_project/Data/Hypertension/cohort/2_cohort_hypertension_with_HYP_indicators.RDS")
 
 hyp1 <- hyp1 %>% dplyr::select(patid, HYP_REG, HYP008_nume, HYP008_denom, 
-                             HYP009_nume, HYP009_denom)
+                             HYP009_nume, HYP009_denom, HYP008_inc_exc_type, HYP009_inc_exc_type)
 # rename all columns apart from patid. 
 
 colnames(hyp1)[-1] <- paste0(colnames(hyp1)[-1], "_QC_QR")
@@ -227,37 +227,89 @@ hyp <- hyp1 %>% full_join(., hyp2, by = c("patid")) %>%
 dat <- full_join(dat, hyp, by = "patid")
 
 
+# add in rule comparison variable
+
+make_comparison <- function(dat, comparison_vars, comp1, comp2) {
+  
+  for (v in comparison_vars) {
+    
+    var1 <- paste0(v, "_", comp1)
+    var2 <- paste0(v, "_", comp2)
+    
+    new_var <- paste0(v, "_", comp1, "_vs_", comp2, "_comparison")
+    
+    dat <- dat %>%
+      mutate(
+        !!new_var := case_when(
+          is.na(.data[[var1]]) & is.na(.data[[var2]]) ~ NA_integer_,
+          .data[[var1]] == 0 & .data[[var2]] == 0 ~ 0,
+          .data[[var1]] == 1 & .data[[var2]] == 0 ~ 1,
+          .data[[var1]] == 0 & .data[[var2]] == 1 ~ 2,
+          .data[[var1]] == 1 & .data[[var2]] == 1 ~ 3
+        )
+      )
+  }
+  
+  return(dat)
+}
+
+# 0 = not in either
+# 1 = in first comparison only
+# 2 = in second comparison only
+# 3 = in both
+
+colnames(dat)
+comp_vars_hypertension <- c("HYP_REG",
+                            "HYP008_denom", "HYP008_nume",
+                            "HYP009_denom", "HYP009_nume")
+
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "QC_NN")
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "QC_VT")
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "UC_QR")
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "UC_NN")
+dat <- make_comparison(dat, comp_vars_hypertension, "QC_QR", "UC_VT")
+
+
 # smoking (prelim)
 
 # smoking <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_with_rules.RDS")
 smoking <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/8_cohort_smoking_full.RDS")
 
 
-smoking %>% select(contains("SMOK1_REG")) %>% table()
-smoking %>% select(contains("SMOK2_REG")) %>% table()
-smoking %>% select(contains("SMOK002_denominator")) %>% table()
-smoking %>% select(contains("SMOK004_denominator")) %>% table()
-smoking %>% select(contains("SMOK005_denominator")) %>% table()
-
-colnames(smoking)
-summary(smoking)
-
-smoking <- smoking %>% dplyr::select(patid, SMOK1_REG, SMOK2_REG, 
-                                     SMOK002_denominator, SMOK002_numerator,
-                                     SMOK004_denominator, SMOK004_numerator,
-                                     SMOK005_denominator, SMOK005_numerator)
-
-
-smoking_update <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_with_rules.RDS")
-
 
 dat <- full_join(dat, smoking, by = "patid")
 # we can label the current QOF register and indicator variables
 
 
+
+
+
+# the variables to compare
+comp_vars_smoking <- c("SMOK002_denominator", "SMOK002_numerator",
+                       "SMOK004_denominator", "SMOK004_numerator",
+                       "SMOK005_denominator", "SMOK005_numerator")
+
+# all comparisons with QA_QT
+dat <- make_comparison(dat, comp_vars_smoking, "current", "new")
+
+table(dat$SMOK002_denominator_current_vs_new_comparison)
+table(dat$SMOK004_denominator_current_vs_new_comparison)
+table(dat$SMOK005_denominator_current_vs_new_comparison)
+
+# "SMOK1_REG_current"                     
+# [253] "SMOK2_REG_current"                      "SMOK002_numerator_current"              "SMOK002_denominator_current"           
+# [256] "SMOK002_inc_exc_type_current"           "SMOK004_numerator_current"              "SMOK004_denominator_current"           
+# [259] "SMOK004_inc_exc_type_current"           "SMOK005_numerator_current"              "SMOK005_denominator_current"           
+# [262] "SMOK005_inc_exc_type_current"           "SMOK1_REG_new"                          "SMOK2_REG_new"                         
+# [265] "SMOK002_numerator_new"                  "SMOK002_denominator_new"                "SMOK004_numerator_new"                 
+# [268] "SMOK004_denominator_new"                "SMOK005_numerator_new"                  "SMOK005_denominator_new"    
+
+
+
 # Asthma QIs
 dat <- dat %>%
-  mutate(AST007_denom_QA_QT = ff_label(AST007_denom_QA_QT, 
+  mutate(AST_REG_QA_QT = ff_label(AST_REG_QA_QT, "Asthma register"),
+    AST007_denom_QA_QT = ff_label(AST007_denom_QA_QT, 
                                       "AST007 (asthma review) denominator"),
          AST007_nume_QA_QT = ff_label(AST007_nume_QA_QT,
                                      "AST007 (asthma review) numerator"),
@@ -281,7 +333,8 @@ dat <- dat %>%
 colnames(dat)
 
 dat <- dat %>%
-  mutate(COPD010_denom_QC = ff_label(COPD010_denom_QC, 
+  mutate(COPD_REG_QC = ff_label(COPD_REG_QC, "COPD register"),
+         COPD010_denom_QC = ff_label(COPD010_denom_QC, 
                                        "COPD010 (COPD review) denominator"),
          COPD010_num_QC = ff_label(COPD010_num_QC,
                                       "COPD010 (COPD review) numerator"),
@@ -289,12 +342,48 @@ dat <- dat %>%
                                        "COPD014 (referral to PR) denominator"),
          COPD014_num_QC = ff_label(COPD014_num_QC, 
                                       "COPD014 (referral to PR) numerator"),
-         AST007_inc_exc_type_QA_QT = ff_label(AST007_inc_exc_type_QA_QT, 
-                                              "AST007 (asthma review) selected/rejected categories"),
-         AST008_inc_exc_type_QA_QT = ff_label(AST008_inc_exc_type_QA_QT, 
-                                              "AST008 (exposure to smoking) selected/rejected categories"),
-  )
+         COPD010_inc_exc_type = ff_label(COPD010_inc_exc_type, 
+                                              "COPD010 (COPD review) selected/rejected categories"),
+         COPD014_inc_exc_type = ff_label(COPD014_inc_exc_type,
+                                              "COPD014 (referral to PR) selected/rejected categories")
+         )
 
+# hypertension QIs
 
+dat <- dat %>%
+  mutate(HYP_REG_QC_QR = ff_label(HYP_REG_QC_QR, "Hypertension register"),
+         HYP008_nume_QC_QR = ff_label(HYP008_nume_QC_QR, 
+                                       "HYP008 (hypertension control in under 80s) numerator"),
+         HYP008_denom_QC_QR = ff_label(HYP008_denom_QC_QR, 
+                                       "HYP008 (hypertension control in under 80s) denominator"),
+         HYP009_nume_QC_QR = ff_label(HYP009_nume_QC_QR,
+                                       "HYP009 (hypertension control in 80+) numerator"),
+         HYP009_denom_QC_QR = ff_label(HYP009_denom_QC_QR, 
+                                       "HYP009 (hypertension control in 80+) denominator"),
+         HYP008_inc_exc_type_QC_QR = ff_label(HYP008_inc_exc_type_QC_QR,
+                                                    "Hypertension control selected/rejected categories"),
+         HYP009_inc_exc_type_QC_QR = ff_label(HYP009_inc_exc_type_QC_QR,
+                                                    "Hypertension control selected/rejected categories"))
+         
+         
+# label smoking QIs
+
+dat <- dat %>%
+  mutate(SMOK1_REG_current = ff_label(SMOK1_REG_current, "Smoking register 1 - has specific disease"),
+         SMOK2_REG_current = ff_label(SMOK2_REG_current, "Smoking register 2 - patient aged >= 15"),
+         SMOK002_numerator_current = ff_label(SMOK002_numerator_current, 
+                                              "SMOK002 (Record of smoking status in high risk individuals) numerator"),
+         SMOK002_denominator_current = ff_label(SMOK002_denominator_current, 
+                                       "SMOK002 (Record of smoking status in high risk individuals) denominator"),
+         SMOK002_inc_exc_type_current = ff_label(SMOK002_inc_exc_type_current, "SMOK002 (Record of smoking status in high risk individuals) selected/rejected categories"),
+         SMOK004_numerator_current = ff_label(SMOK004_numerator_current,
+                                              "SMOK004 (Smoking cessation advice/education given to smokers) numerator"),
+         SMOK004_denominator_current = ff_label(SMOK004_denominator_current, 
+                                                "SMOK004 (Smoking cessation advice/education given to smokers) denominator"),
+         SMOK004_inc_exc_type_current = ff_label(SMOK004_inc_exc_type_current, 
+                                                 "SMOK004 (Smoking cessation advice/education given to smokers) selected/rejected status"),
+         SMOK005_numerator_current = ff_label(SMOK005_numerator_current, "SMOK005 (Smoking cessation advice/education given to high risk smokers) numerator"),
+         SMOK005_denominator_current = ff_label(SMOK005_denominator_current, "SMOK005 (Smoking cessation advice/education given to high risk smokers) numerator"),
+         SMOK005_inc_exc_type_current = ff_label(SMOK005_inc_exc_type_current, "SMOK005 (Smoking cessation advice/education given to high risk smokers) selected/rejected categories"))
         
-saveRDS(dat, "Z:/Group_work/QOF_project/Data/cohort/50_temp_cohort_asthma_QI_comps_added.RDS")
+saveRDS(dat, "Z:/Group_work/QOF_project/Data/cohort/07_finalised_cohort_with_QI_comps_added.RDS")

@@ -12,7 +12,7 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_w
 
 # ensure they are in the integer format
 dat <- dat %>% select(patid, starts_with("SMOK1_REG"), starts_with("SMOK2_REG"), starts_with("SMOK0"))
-dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
+# dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
 
 str(dat)
 # created using the help of this web page: 
@@ -85,7 +85,6 @@ SMOK005_denom_RN7_rejected_N <- dat %>% filter(SMOK1_REG == 1 &
                                                  SMOK005_denom_RN4 == 0 & 
                                                  SMOK005_denom_RN5 == 0 & 
                                                  SMOK005_denom_RN6 == 0 & 
-                                                 SMOK005_denom_RN7 == 0 & 
                                                  SMOK005_denom_RN7 == 1)  %>% nrow()
 
 SMOK005_denom_RN7_selected_N <- dat %>% filter(SMOK1_REG == 1 &     
@@ -95,7 +94,6 @@ SMOK005_denom_RN7_selected_N <- dat %>% filter(SMOK1_REG == 1 &
                                                  SMOK005_denom_RN4 == 0 & 
                                                  SMOK005_denom_RN5 == 0 & 
                                                  SMOK005_denom_RN6 == 0 & 
-                                                 SMOK005_denom_RN7 == 0 & 
                                                  SMOK005_denom_RN7 == 0)  %>% nrow()
 
 
@@ -137,20 +135,19 @@ SMOK1_REG_N == sum(SMOK005_denom_RN1_N,
 # these are the cleaner names, with their group (divided into 4 options: 
 #          register,  excluded, selected numerator, selected denominator
 
-nodes <- data.frame("name" = c("Smoking \nregister ", "Rejected rule 1: Did not have 'current smoker' status",
-                               "Selected rule 2: Had referral for smoking cessation service/advisor or pharmacotherapy",
-                               "Rejected rule 3: Unsuitable for QI care",
-                               "Rejected rule 4: Declined QI care",
-                               "Rejected rule 5: Did not respond to smoking care review invitations",
-                               "Rejected rule 6: Recently diagnosed with any of above conditions",
-                               # "Rejected rule 7: Registered at practice <3 months",
-                              " ",
-                               "Selected rule 7: Remainder in denominator"),
+nodes <- data.frame("name" = c("Smoking \nregister 1 \n(n = 632347) ", 
+                               "Rejected rule 1: Did not have 'current smoker' status (n = 549890)",
+                               "Selected rule 2: Received smoking cessation eduction/referral/pharmacotherapy <12 months (n = 77630)",
+                               "Rejected rule 3: Unsuitable for QI care (n = 64)",
+                               "Rejected rule 4: Declined QI care (n = 90)",
+                               "Rejected rule 5: Invited for monitoring (n = 1324)",
+                               "Rejected rule 6: Newly diagnosed with register conditions <3 months (n = 436)",
+                               "Rejected rule 7: Registered at practice <3 months (n = 231)",
+                               "Selected rule 7: Remainder in denominator (n = 2682)"),
                     "group" = c("register", "excluded", "selected_numerator", "excluded",
                                 "excluded", "excluded", "excluded", 
-                               "excluded",
+                                "excluded",
                                 "selected_denominator"))
-
 
 #------------ create the data frame showing how the nodes relate to each other
 

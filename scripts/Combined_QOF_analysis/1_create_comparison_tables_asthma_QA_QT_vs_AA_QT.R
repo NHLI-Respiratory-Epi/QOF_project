@@ -10,7 +10,7 @@ library(ggplot2)
 library(stringr)
 
 
-dat <- readRDS("Z:/Group_work/QOF_project/Data/cohort/50_temp_cohort_asthma_QI_comps_added.RDS")
+dat <- readRDS("Z:/Group_work/QOF_project/Data/cohort/07_finalised_cohort_with_QI_comps_added.RDS")
 
 
 # comparisons of interest, given that most differences are minimal:

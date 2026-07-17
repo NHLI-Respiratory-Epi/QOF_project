@@ -1,0 +1,25 @@
+# Obtain citations for the packages used
+
+# citation("dplyr")
+# citation("data.table")
+# citation("Rdiagnosislist")
+# citation("parallel")
+# citation("glmmTMB")
+# citation("Rdiagnosislist")
+# citation("finalfit")
+# citation("ggplot2")
+# citation("networkD3")
+# citation("htmlwidgets")
+
+library("dplyr")
+library("data.table")
+library("Rdiagnosislist")
+library("parallel")
+library("glmmTMB")
+library("Rdiagnosislist")
+library("finalfit")
+library("ggplot2")
+library("networkD3")
+library("htmlwidgets")
+
+knitr::write_bib(.packages(), "Z:/Group_work/QOF_project/Alex/temp/package_citations.bib")

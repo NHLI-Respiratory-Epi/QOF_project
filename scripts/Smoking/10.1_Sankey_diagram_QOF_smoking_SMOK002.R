@@ -12,7 +12,7 @@ dat <- readRDS("Z:/Group_work/QOF_project/Data/Smoking/cohort/3_cohort_smoking_w
 
 # ensure they are in the integer format
 dat <- dat %>% select(patid, starts_with("SMOK1_REG"), starts_with("SMOK2_REG"), starts_with("SMOK0"))
-dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
+# dat <- dat %>% mutate(across(SMOK1_REG_RN1:SMOK005_numerator, as.integer))
 
 str(dat)
 # created using the help of this web page: 
@@ -61,7 +61,7 @@ SMOK002_denom_RN2_N <- dat %>% filter(SMOK1_REG == 1 &
 
 SMOK002_denom_RN3_N <- dat %>% filter(SMOK1_REG == 1 &     SMOK002_denom_RN1 == 1 & 
                                        SMOK002_denom_RN2 == 0 & 
-                                       SMOK002_denom_RN3 == 0 )  %>% nrow()
+                                       SMOK002_denom_RN3 == 1)  %>% nrow()
 
 
 SMOK002_denom_RN4_N <- dat %>% filter(SMOK1_REG == 1 &     SMOK002_denom_RN1 == 1 &  
@@ -216,21 +216,21 @@ SMOK1_REG_N == sum(SMOK002_denom_RN1_N,
 # these are the cleaner names, with their group (divided into 4 options: 
 #          register,  excluded, selected numerator, selected denominator
 
-nodes <- data.frame("name" = c("Smoking \nregister ", 
+nodes <- data.frame("name" = c("Smoking \nregister 1 \n(n = 632347) ", 
                                # "Selected rule 1: Has a diagnosis of CHD, PAD, stroke or TIA, hypertension, diabetes, COPD, CKD, asthma, schizophrenia, bipolar affective disorder or other psychoses",
                                "",
-                               "Selected rule 2: Has current smoking status",
-                               "Selected rule 3: Patients >25 who have never smoked",
-                               "Selected rule 4: Patients <25 who have never smoked",
-                               "Selected rule 5: Patients who are ex-smokers",
-                               "Selected rule 6: Patients w/ no 'current smoker' code but have 3 consecutive years of 'ex-smoker' status",
-                               "Rejected rule 7: Unsuitable for QI care",
-                               "Rejected rule 8: Chose not to disclose smoking status",
-                               "Rejected rule 9: Declined QI care",
-                               "Rejected rule 10: Did not respond to at least 2 smoking care review invitations",
-                               "Rejected rule 11: Recently diagnosed with any of above conditions",
-                               "Rejected rule 12: Registered at practice <3 months",
-                               "Selected rule 12: Remainder in denominator"),
+                               "Selected rule 2: Has current smoking status recorded in past year (n = 67276)",
+                               "Selected rule 3: Patients >25 recorded as never smoker (n = 314000)",
+                               "Selected rule 4: Patients <25 recorded as never smoker in past year (n = 20132)",
+                               "Selected rule 5: Patients recorded as ex-smokers in past year (n = 151371)",
+                               "Selected rule 6: Patients with 3 consecutive years of 'ex-smoker' status (n = 24434)",
+                               "Rejected rule 7: Unsuitable for QI care (n = 173)",
+                               "Rejected rule 8: Chose not to disclose smoking status (n = 1007)",
+                               "Rejected rule 9: Declined QI care (n = 247)",
+                               "Rejected rule 10: Invited for monitoring (n = 5136)",
+                               "Rejected rule 11: Newly diagnosed with register conditions <3 months (n = 4448)",
+                               "Rejected rule 12: Registered at practice <3 months (n = 561)",
+                               "Selected rule 12: Remainder in denominator (n = 43562)"),
                     "group" = c("register", 
                                 "selected_numerator",
                                 "selected_numerator", "selected_numerator", "selected_numerator",
@@ -253,7 +253,7 @@ links = as.data.frame(matrix(c(
                                0, 10, SMOK002_denom_RN10_N,
                                0, 11, SMOK002_denom_RN11_N,
                                0, 12, SMOK002_denom_RN12_rejected_N,
-                               0, 12, SMOK002_denom_RN12_selected_N),
+                               0, 13, SMOK002_denom_RN12_selected_N),
                              byrow = TRUE, ncol = 3))
 # this line provides column names to the newly created 'links' data frame
 names(links) = c("source", "target", "value")
