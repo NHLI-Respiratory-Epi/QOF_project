@@ -43,12 +43,12 @@ AST_REG_AA_QT_vs_AA_BT_table <- dat %>%
   filter(AST_REG_AA_QT_vs_AA_BT_comparison != 0) %>% 
   mutate(AST_REG_AA_QT_vs_AA_BT_comparison = as.character(AST_REG_AA_QT_vs_AA_BT_comparison)) %>%
   mutate(AST_REG_AA_QT_vs_AA_BT_comparison = recode(AST_REG_AA_QT_vs_AA_BT_comparison,
-                                                    `1` = "In AA_QT only",
-                                                    `2` = "In AA_BT only",
+                                                    `1` = "In QOF 2025-26 only",
+                                                    `2` = "In post-review only",
                                                     `3` = "In both")) %>%
-  summary_factorlist(., dependent = "AST_REG_AA_QT_vs_AA_BT_comparison", 
+  summary_factorlist_clustered(., dependent = "AST_REG_AA_QT_vs_AA_BT_comparison", 
                      explanatory = ind_vars_characteristics,
-                     p = TRUE,total_col = TRUE, add_col_totals = TRUE)
+                     p = TRUE, total_col = TRUE, add_col_totals = TRUE)
 
 ft <- flextable(AST_REG_AA_QT_vs_AA_BT_table)
 ft <- fontsize(ft, size = 9, part = "all")
@@ -72,6 +72,7 @@ doc <- read_docx() %>% #  body_end_section_landscape() %>%
   body_end_block_section(value = block_section(property = ps_land))
 
 print(doc, target = "Z:/Group_work/QOF_project/Alex/Output/Asthma/AST_REG_AA_QT_vs_AA_BT_table_patient_characteristics.docx")  
+saveRDS(ft, "Z:/Group_work/QOF_project/Alex/Output/Asthma/supp_flex_tables/AST_REG_AA_QT_vs_AA_BT_table_patient_characteristics.RDS")
 
 
 # outcomes table

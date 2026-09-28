@@ -12,7 +12,6 @@ library(stringr)
 
 dat <- readRDS("Z:/Group_work/QOF_project/Data/cohort/07_finalised_cohort_with_QI_comps_added.RDS")
 
-
 # comparisons of interest, given that most differences are minimal:
 
 # QA_QT vs AA_QT
@@ -40,10 +39,10 @@ AST_REG_QA_QT_vs_AA_QT_table <- dat %>%
   filter(AST_REG_QA_QT_vs_AA_QT_comparison != 0) %>% 
   mutate(AST_REG_QA_QT_vs_AA_QT_comparison = as.character(AST_REG_QA_QT_vs_AA_QT_comparison)) %>%
   mutate(AST_REG_QA_QT_vs_AA_QT_comparison = recode(AST_REG_QA_QT_vs_AA_QT_comparison,
-                                                    `1` = "In current QOF only",
-                                                    `2` = "In updated QOF only",
+                                                    `1` = "In QOF 2025-26 only",
+                                                    `2` = "In post-review only",
                                                     `3` = "In both")) %>%
-  summary_factorlist(., dependent = "AST_REG_QA_QT_vs_AA_QT_comparison", 
+  summary_factorlist_clustered(., dependent = "AST_REG_QA_QT_vs_AA_QT_comparison", 
                      explanatory = ind_vars_characteristics,
                      p = TRUE,total_col = TRUE, add_col_totals = TRUE)
 
@@ -69,17 +68,18 @@ doc <- read_docx() %>% #  body_end_section_landscape() %>%
   body_end_block_section(value = block_section(property = ps_land))
 
 print(doc, target = "Z:/Group_work/QOF_project/Alex/Output/Asthma/AST_REG_QA_QT_vs_AA_QT_table_patient_characteristics.docx")  
-
+saveRDS(ft, "Z:/Group_work/QOF_project/Alex/Output/Asthma/supp_flex_tables/AST_REG_QA_QT_vs_AA_QT_table_patient_characteristics.RDS")
+        
 # outcomes table
 AST_REG_QA_QT_vs_AA_QT_table_outcomes <- dat %>%
   filter(AST_REG_QA_QT_vs_AA_QT_comparison != 0) %>% 
   filter(in_follow_up_flag == 1) %>%
   mutate(AST_REG_QA_QT_vs_AA_QT_comparison = as.character(AST_REG_QA_QT_vs_AA_QT_comparison)) %>%
   mutate(AST_REG_QA_QT_vs_AA_QT_comparison = recode(AST_REG_QA_QT_vs_AA_QT_comparison,
-                                                    `1` = "In current QOF only",
+                                                    `1` = "In QOF 2025-26 only",
                                                     `2` = "In updated QOF only",
-                                                    `3` = "In both")) %>%
-  summary_factorlist(., dependent = "AST_REG_QA_QT_vs_AA_QT_comparison", 
+                                                    `3` = "In post-review only")) %>%
+  summary_factorlist_clustered(., dependent = "AST_REG_QA_QT_vs_AA_QT_comparison", 
                      explanatory = ind_vars_asthma_outcomes,
                      p = TRUE,total_col = TRUE, add_col_totals = TRUE)
 
@@ -145,9 +145,9 @@ ASTsummaryFunction <- function(x, group_col = NULL, add_totals = c("yes", "no"))
   if (!is.null(group_col)) {
     x[[group_col]] <- recode(
       as.character(x[[group_col]]),
-      "1" = "In current QOF only",
+      "1" = "In QOF 2025-26 only",
       "2" = "In updated QOF only",
-      "3" = "In both"
+      "3" = "In post-review only"
     )
   }
   
@@ -238,9 +238,9 @@ ASTsummaryFunction <- function(x,
   if (!is.null(group_col)) {
     x[[group_col]] <- recode(
       as.character(x[[group_col]]),
-      "1" = "In current QOF only",
+      "1" = "In QOF 2025-26 only",
       "2" = "In updated QOF only",
-      "3" = "In both"
+      "3" = "In post-review only"
     )
   }
   

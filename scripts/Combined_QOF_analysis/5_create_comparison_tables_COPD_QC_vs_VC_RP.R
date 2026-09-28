@@ -40,7 +40,7 @@ summary(dat$outcome_aecopd_bin)
 
 ind_vars_characteristics <- dat %>% select(gender, region, age, eth5, BMI_cat,
                                            gord:htn_qof, 
-                                           baseline_aecopd, baseline_asthma_attacks) %>% 
+                                           baseline_aecopd) %>% 
   colnames()
 
 
@@ -49,10 +49,10 @@ COPD_REG_QC_vs_VC_RP_table <- dat %>%
   filter(COPD_REG_QC_vs_VC_RP_comparison != 0) %>% 
   mutate(COPD_REG_QC_vs_VC_RP_comparison = as.character(COPD_REG_QC_vs_VC_RP_comparison)) %>%
   mutate(COPD_REG_QC_vs_VC_RP_comparison = recode(COPD_REG_QC_vs_VC_RP_comparison,
-                                               `1` = "In current QOF only",
-                                               `2` = "In updated QOF only",
-                                               `3` = "In both")) %>%
-  summary_factorlist(., dependent = "COPD_REG_QC_vs_VC_RP_comparison", 
+                                                  `1` = "In QOF 2025-26 only",
+                                                  `2` = "In post-review only",
+                                                  `3` = "In both")) %>%
+  summary_factorlist_clustered(., dependent = "COPD_REG_QC_vs_VC_RP_comparison", 
                      explanatory = ind_vars_characteristics,
                      p = TRUE,total_col = TRUE, add_col_totals = TRUE)
 
@@ -78,6 +78,7 @@ doc <- read_docx() %>% #  body_end_section_landscape() %>%
   body_end_block_section(value = block_section(property = ps_land))
 
 print(doc, target = "Z:/Group_work/QOF_project/Alex/Output/COPD/COPD_REG_QC_vs_VC_RP_table_patient_characteristics.docx")  
+saveRDS(ft, "Z:/Group_work/QOF_project/Alex/Output/COPD/supp_flex_tables/COPD_REG_QC_vs_VC_RP_table_patient_characteristics.RDS")
 
 # outcomes table
 

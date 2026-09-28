@@ -7,6 +7,7 @@
 #                                                  suppress = TRUE)
 
 .ff_cluster_p <- function(dat, dependent, explanatory, is_numeric, nonpara, cluster, digits) {
+  dat <- as.data.frame(dat)
   keep <- stats::complete.cases(dat[, c(dependent, explanatory, cluster), drop = FALSE])
   dat <- dat[keep, , drop = FALSE]
   if (nrow(dat) < 2L || length(unique(dat[[cluster]])) < 2L)
@@ -236,7 +237,7 @@ summary_factorlist_clustered <- function(.data,
 	if (!is.null(cluster) && (length(cluster) != 1L || !is.character(cluster) ||
 		is.na(cluster) || !cluster %in% names(.data))) stop("cluster must name one column in .data, or be NULL.")
 
-	if(any(class(.data) %in% c("tbl_df", "tbl"))) .data = data.frame(.data)
+	if(any(class(.data) %in% c("tbl_df", "tbl", "data.table"))) .data = data.frame(.data)
 	if(is.null(explanatory)) stop("No explanatory variable(s) provided")
 	if(any(explanatory == ".")){
 		explanatory = .data %>% 

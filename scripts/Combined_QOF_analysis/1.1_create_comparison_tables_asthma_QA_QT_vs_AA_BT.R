@@ -34,18 +34,40 @@ ind_vars_asthma_outcomes <- dat %>% select(outcome_asthma_attacks_bin,
   select(-contains("inc_exc_type")) %>% colnames()
 
 
+# post-review numbers too low for chi-squared tests
+# recalculate the chi square tests with one category removed
 
 # patient characteristics table
 AST_REG_QA_QT_vs_AA_BT_table <- dat %>%
   filter(AST_REG_QA_QT_vs_AA_BT_comparison != 0) %>% 
+#  filter(AST_REG_QA_QT_vs_AA_BT_comparison != 2) %>% # this is because numbers are too low
   mutate(AST_REG_QA_QT_vs_AA_BT_comparison = as.character(AST_REG_QA_QT_vs_AA_BT_comparison)) %>%
   mutate(AST_REG_QA_QT_vs_AA_BT_comparison = recode(AST_REG_QA_QT_vs_AA_BT_comparison,
-                                                    `1` = "In current QOF only",
-                                                    `2` = "In updated QOF only",
+                                                    `1` = "In QOF 2025-26 only",
+                                                    `2` = "In post-review only",
                                                     `3` = "In both")) %>%
-  summary_factorlist(., dependent = "AST_REG_QA_QT_vs_AA_BT_comparison", 
+  summary_factorlist_clustered(., dependent = "AST_REG_QA_QT_vs_AA_BT_comparison", 
                      explanatory = ind_vars_characteristics,
                      p = TRUE,total_col = TRUE, add_col_totals = TRUE)
+
+# old p values
+AST_REG_QA_QT_vs_AA_BT_table$p
+# for p value
+
+AST_REG_QA_QT_vs_AA_BT_table$p <- dat %>%
+  filter(AST_REG_QA_QT_vs_AA_BT_comparison != 0) %>% 
+  filter(AST_REG_QA_QT_vs_AA_BT_comparison != 2) %>% # this is because numbers are too low
+  mutate(AST_REG_QA_QT_vs_AA_BT_comparison = as.character(AST_REG_QA_QT_vs_AA_BT_comparison)) %>%
+  mutate(AST_REG_QA_QT_vs_AA_BT_comparison = recode(AST_REG_QA_QT_vs_AA_BT_comparison,
+                                                    `1` = "In QOF 2025-26 only",
+                                                    `2` = "In post-review only",
+                                                    `3` = "In both")) %>%
+  summary_factorlist_clustered(., dependent = "AST_REG_QA_QT_vs_AA_BT_comparison", 
+                               explanatory = ind_vars_characteristics,
+                               p = TRUE,total_col = TRUE, add_col_totals = TRUE) %>% pull(p)
+
+# new p values
+AST_REG_QA_QT_vs_AA_BT_table$p
 
 
 ft <- flextable(AST_REG_QA_QT_vs_AA_BT_table)
@@ -69,6 +91,7 @@ doc <- read_docx() %>% #  body_end_section_landscape() %>%
   body_end_block_section(value = block_section(property = ps_land))
 
 print(doc, target = "Z:/Group_work/QOF_project/Alex/Output/Asthma/AST_REG_QA_QT_vs_AA_BT_table_patient_characteristics.docx")  
+saveRDS(ft, "Z:/Group_work/QOF_project/Alex/Output/Asthma/supp_flex_tables/AST_REG_QA_QT_vs_AA_BT_table_patient_characteristics.RDS")
 
 # outcomes table
 AST_REG_QA_QT_vs_AA_BT_table_outcomes <- dat %>%

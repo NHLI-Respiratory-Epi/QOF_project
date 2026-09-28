@@ -386,4 +386,7 @@ dat <- dat %>%
          SMOK005_denominator_current = ff_label(SMOK005_denominator_current, "SMOK005 (Smoking cessation advice/education given to high risk smokers) numerator"),
          SMOK005_inc_exc_type_current = ff_label(SMOK005_inc_exc_type_current, "SMOK005 (Smoking cessation advice/education given to high risk smokers) selected/rejected categories"))
         
+
+dat <- as.data.frame(dat)
+
 saveRDS(dat, "Z:/Group_work/QOF_project/Data/cohort/07_finalised_cohort_with_QI_comps_added.RDS")

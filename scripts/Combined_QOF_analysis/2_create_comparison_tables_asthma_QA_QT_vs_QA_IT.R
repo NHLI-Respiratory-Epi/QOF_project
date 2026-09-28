@@ -36,19 +36,38 @@ ind_vars_asthma_outcomes <- dat %>% select(outcome_asthma_attacks_bin,
   select(-starts_with("AST_REG")) %>% 
   select(-contains("inc_exc_type")) %>% colnames()
 
-
+# values too low in update column - change the p value
 
 # patient characteristics table
 AST_REG_QA_QT_vs_QA_IT_table <- dat %>%
   filter(AST_REG_QA_QT_vs_QA_IT_comparison != 0) %>% 
   mutate(AST_REG_QA_QT_vs_QA_IT_comparison = as.character(AST_REG_QA_QT_vs_QA_IT_comparison)) %>%
   mutate(AST_REG_QA_QT_vs_QA_IT_comparison = recode(AST_REG_QA_QT_vs_QA_IT_comparison,
-                                                    `1` = "In current QOF only",
-                                                    `2` = "In updated QOF only",
+                                                    `1` = "In QOF 2025-26 only",
+                                                    `2` = "In post-review only",
                                                     `3` = "In both")) %>%
-  summary_factorlist(., dependent = "AST_REG_QA_QT_vs_QA_IT_comparison", 
+  summary_factorlist_clustered(., dependent = "AST_REG_QA_QT_vs_QA_IT_comparison", 
                      explanatory = ind_vars_characteristics,
                      p = TRUE,total_col = TRUE, add_col_totals = TRUE)
+
+# old p
+AST_REG_QA_QT_vs_QA_IT_table$p
+
+AST_REG_QA_QT_vs_QA_IT_table$p <- dat %>%
+  filter(AST_REG_QA_QT_vs_QA_IT_comparison != 0) %>% 
+  filter(AST_REG_QA_QT_vs_QA_IT_comparison != 2) %>% # remove post-review from p value 
+  mutate(AST_REG_QA_QT_vs_QA_IT_comparison = as.character(AST_REG_QA_QT_vs_QA_IT_comparison)) %>%
+  mutate(AST_REG_QA_QT_vs_QA_IT_comparison = recode(AST_REG_QA_QT_vs_QA_IT_comparison,
+                                                    `1` = "In QOF 2025-26 only",
+                                                    `2` = "In post-review only",
+                                                    `3` = "In both")) %>%
+  summary_factorlist_clustered(., dependent = "AST_REG_QA_QT_vs_QA_IT_comparison", 
+                               explanatory = ind_vars_characteristics,
+                               p = TRUE,total_col = TRUE, add_col_totals = TRUE) %>% pull(p)
+
+# new p
+AST_REG_QA_QT_vs_QA_IT_table$p
+
 
 ft <- flextable(AST_REG_QA_QT_vs_QA_IT_table)
 ft <- fontsize(ft, size = 9, part = "all")
@@ -72,6 +91,7 @@ doc <- read_docx() %>% #  body_end_section_landscape() %>%
   body_end_block_section(value = block_section(property = ps_land))
 
 print(doc, target = "Z:/Group_work/QOF_project/Alex/Output/Asthma/AST_REG_QA_QT_vs_QA_IT_table_patient_characteristics.docx")  
+saveRDS(ft, "Z:/Group_work/QOF_project/Alex/Output/Asthma/supp_flex_tables/AST_REG_QA_QT_vs_QA_IT_table_patient_characteristics.RDS")
 
 
 # outcomes table

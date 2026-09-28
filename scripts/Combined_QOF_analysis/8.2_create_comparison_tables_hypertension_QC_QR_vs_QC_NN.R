@@ -44,8 +44,7 @@ summary(dat$outcome_aecopd_bin)
 
 
 ind_vars_characteristics <- dat %>% select(gender, region, age, eth5, BMI_cat,
-                                           gord:htn_qof, 
-                                           baseline_aecopd, baseline_asthma_attacks) %>% 
+                                           gord:htn_qof) %>% 
   colnames()
 
 
@@ -54,12 +53,31 @@ HYP_REG_QC_QR_vs_UC_QR_table <- dat %>%
   filter(HYP_REG_QC_QR_vs_UC_QR_comparison != 0) %>% 
   mutate(HYP_REG_QC_QR_vs_UC_QR_comparison = as.character(HYP_REG_QC_QR_vs_UC_QR_comparison)) %>%
   mutate(HYP_REG_QC_QR_vs_UC_QR_comparison = recode(HYP_REG_QC_QR_vs_UC_QR_comparison,
-                                               `1` = "In QC_QR only",
-                                               `2` = "In UC_QR only",
-                                               `3` = "In both")) %>%
-  summary_factorlist(., dependent = "HYP_REG_QC_QR_vs_UC_QR_comparison", 
+                                                    `1` = "In QOF 2025-26 only",
+                                                    `2` = "In post-review only",
+                                                    `3` = "In both")) %>%
+  summary_factorlist_clustered(., dependent = "HYP_REG_QC_QR_vs_UC_QR_comparison", 
                      explanatory = ind_vars_characteristics,
                      p = TRUE,total_col = TRUE, add_col_totals = TRUE)
+
+# old p 
+HYP_REG_QC_QR_vs_UC_QR_table$p
+
+# p value update
+HYP_REG_QC_QR_vs_UC_QR_table$p <- dat %>%
+  filter(HYP_REG_QC_QR_vs_UC_QR_comparison != 0) %>% 
+  filter(HYP_REG_QC_QR_vs_UC_QR_comparison != 2) %>% # don't include these in chi square test 
+  mutate(HYP_REG_QC_QR_vs_UC_QR_comparison = as.character(HYP_REG_QC_QR_vs_UC_QR_comparison)) %>%
+  mutate(HYP_REG_QC_QR_vs_UC_QR_comparison = recode(HYP_REG_QC_QR_vs_UC_QR_comparison,
+                                                    `1` = "In QOF 2025-26 only",
+                                                    `2` = "In post-review only",
+                                                    `3` = "In both")) %>%
+  summary_factorlist_clustered(., dependent = "HYP_REG_QC_QR_vs_UC_QR_comparison", 
+                               explanatory = ind_vars_characteristics,
+                               p = TRUE,total_col = TRUE, add_col_totals = TRUE) %>% pull(p)
+
+# new p 
+HYP_REG_QC_QR_vs_UC_QR_table$p
 
 ft <- flextable(HYP_REG_QC_QR_vs_UC_QR_table)
 ft <- fontsize(ft, size = 9, part = "all")
@@ -83,6 +101,7 @@ doc <- read_docx() %>% #  body_end_section_landscape() %>%
   body_end_block_section(value = block_section(property = ps_land))
 
 print(doc, target = "Z:/Group_work/QOF_project/Alex/Output/Hypertension/HYP_REG_QC_QR_vs_UC_QR_table_patient_characteristics.docx")  
+saveRDS(ft, "Z:/Group_work/QOF_project/Alex/Output/Hypertension/HYP_REG_QC_QR_vs_UC_QR_table_patient_characteristics_flextable.RDS")
 
 # outcomes table
 
