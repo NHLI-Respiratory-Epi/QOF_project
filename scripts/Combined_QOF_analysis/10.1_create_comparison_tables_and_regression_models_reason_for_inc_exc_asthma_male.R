@@ -51,12 +51,19 @@ dat %>% select(contains("inc_exc")) %>% str()
 # patient characteristics table
 AST007_inc_exc_type_QA_QT_table <- dat %>%
   filter(!is.na(AST007_inc_exc_type_QA_QT)) %>% 
-  summary_factorlist(., dependent = "AST007_inc_exc_type_QA_QT", 
+  summary_factorlist_clustered(., dependent = "AST007_inc_exc_type_QA_QT", 
                      explanatory = ind_vars_characteristics_for_table,
                      p = TRUE,total_col = TRUE, add_col_totals = TRUE)
 
 writexl::write_xlsx(AST007_inc_exc_type_QA_QT_table, "X:/QOF_project/Alex/Output/Asthma/AST007_inc_exc_type_QA_QT_table_patient_characteristics_male.xlsx")
 
+ft <- flextable(AST007_inc_exc_type_QA_QT_table)
+ft <- fontsize(ft, size = 9, part = "all")
+ft <- width(ft, j = 1, width = 2.2)      # first/left column
+ft <- width(ft, j = 2:ncol(AST007_inc_exc_type_QA_QT_table), width = 1.0)  # remaining columns
+ft <- autofit(ft)
+
+saveRDS(ft, "X:/QOF_project/Alex/Output/Asthma/AST007_inc_exc_type_QA_QT_table_patient_characteristics_male_flextable.RDS")
 
 # patient characteristics requires everyone.
 # patient outcomes is just a subsection.

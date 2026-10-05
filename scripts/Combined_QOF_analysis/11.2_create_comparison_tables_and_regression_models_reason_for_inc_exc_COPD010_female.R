@@ -51,11 +51,21 @@ dat %>% select(contains("inc_exc")) %>% str()
 # patient characteristics table
 COPD010_inc_exc_type_table <- dat %>%
   filter(!is.na(COPD010_inc_exc_type)) %>% 
-  summary_factorlist(., dependent = "COPD010_inc_exc_type", 
+  summary_factorlist_clustered(., dependent = "COPD010_inc_exc_type", 
                      explanatory = ind_vars_characteristics_for_table,
                      p = TRUE,total_col = TRUE, add_col_totals = TRUE)
 
 writexl::write_xlsx(COPD010_inc_exc_type_table, "X:/QOF_project/Alex/Output/COPD/COPD010_inc_exc_type_table_patient_characteristics_female.xlsx")
+
+
+
+ft <- flextable(COPD010_inc_exc_type_table)
+ft <- fontsize(ft, size = 9, part = "all")
+ft <- width(ft, j = 1, width = 2.2)      # first/left column
+ft <- width(ft, j = 2:ncol(COPD010_inc_exc_type_table), width = 1.0)  # remaining columns
+ft <- autofit(ft)
+
+saveRDS(ft, "X:/QOF_project/Alex/Output/COPD/COPD010_inc_exc_type_table_patient_characteristics_female_flextable.RDS")
 
 
 # patient characteristics requires everyone.

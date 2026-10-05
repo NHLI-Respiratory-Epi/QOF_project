@@ -66,7 +66,7 @@ HYP_REG_QC_QR_vs_UC_QR_table$p
 # p value update
 HYP_REG_QC_QR_vs_UC_QR_table$p <- dat %>%
   filter(HYP_REG_QC_QR_vs_UC_QR_comparison != 0) %>% 
-  filter(HYP_REG_QC_QR_vs_UC_QR_comparison != 2) %>% # don't include these in chi square test 
+  filter(HYP_REG_QC_QR_vs_UC_QR_comparison != 1) %>% # don't include these in chi square test 
   mutate(HYP_REG_QC_QR_vs_UC_QR_comparison = as.character(HYP_REG_QC_QR_vs_UC_QR_comparison)) %>%
   mutate(HYP_REG_QC_QR_vs_UC_QR_comparison = recode(HYP_REG_QC_QR_vs_UC_QR_comparison,
                                                     `1` = "In QOF 2025-26 only",
