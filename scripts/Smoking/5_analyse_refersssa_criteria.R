@@ -350,6 +350,10 @@ pop_004 %>%
              ~ !is.na(.x))
     ))
 
+pop_004 %>%
+  summarise(
+    total = sum(!is.na(SC_education_declined_1))) # 
+
 pop_005 %>%
   summarise(
     total = sum(
@@ -361,7 +365,13 @@ pop_005 %>%
              ~ !is.na(.x))
     ))
 
+pop_005 %>%
+  summarise(
+    total = sum(!is.na(SC_education_declined_1))) # 
+
 ## 6. SCS declined
+
+
 pop_004 %>%
   summarise(
     total = sum(
@@ -372,6 +382,10 @@ pop_004 %>%
                SCS_declined_5), 
              ~ !is.na(.x))
     ))
+
+pop_004 %>%
+  summarise(
+    total = sum(!is.na(SCS_declined_1)))
 
 pop_005 %>%
   summarise(
@@ -384,9 +398,10 @@ pop_005 %>%
              ~ !is.na(.x))
     ))
 
+pop_005 %>%
+  summarise(
+    total = sum(!is.na(SCS_declined_1)))
 
-pop_004 %>%
-  summarise()
 
 
 ######
